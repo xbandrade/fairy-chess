@@ -15,6 +15,9 @@ class Piece{
         Piece(int pos, int player_id);
         int getPos();
         virtual void updateAllowedMoves(std::vector<Piece *> &positions) = 0;
+        virtual bool getHasMoved();
+        virtual void setHasMoved(bool moved);
+        virtual ~Piece(){}
 };
 
 class Pawn : public Piece{
@@ -22,6 +25,8 @@ class Pawn : public Piece{
         bool hasMoved = false;
     public:
         Pawn(int pos, int player_id);
+        bool getHasMoved();
+        void setHasMoved(bool moved);
         void updateAllowedMoves(std::vector<Piece *> &positions);
 };
 
