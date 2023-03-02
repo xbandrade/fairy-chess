@@ -77,10 +77,25 @@ std::string validateMove(std::string move, std::unordered_map<std::string, int> 
     return "";
 }
 
-void updateAllPossibleMoves(std::vector<Piece *> &positions){
+void updateAllPossibleMoves(std::vector<Piece *> &positions, 
+                            std::unordered_set<std::string> &blackPossibleMoves,
+                            std::unordered_set<std::string> &whitePossibleMoves){
+    blackPossibleMoves.clear();
+    whitePossibleMoves.clear();
+    char alg[2];
     for (auto piece : positions){
         if (piece){
+            std::string pieceId = piece->id == "P" ? "" : piece->id;
             piece->updateAllowedMoves(positions);
+            for (auto p : piece->allowedMoves){
+                positionToAlgebraic(p, alg);
+                if (piece->player == 1){
+                    whitePossibleMoves.insert(pieceId + std::string(alg, 2));
+                }
+                else{
+                    blackPossibleMoves.insert(pieceId + std::string(alg, 2));
+                }
+            }
         }
     }
 }
@@ -156,6 +171,7 @@ void play(std::vector<Piece *> &positions)
     std::string move, validated;
     std::unordered_map<std::string, std::vector<int>> pieces;
     std::unordered_map<std::string, int> positionMap;
+    std::unordered_set<std::string> whitePossibleMoves, blackPossibleMoves;
     createDefaultPieces(1, positions);
     createDefaultPieces(2, positions); 
     piecesLocation(pieces, positions);
@@ -165,7 +181,7 @@ void play(std::vector<Piece *> &positions)
     int currentTurn = 1;
     while(!checkmate && !draw){
         printBoard(positions);
-        updateAllPossibleMoves(positions);
+        updateAllPossibleMoves(positions, blackPossibleMoves, whitePossibleMoves);
         std::cout << "Enter a move - " << (currentTurn == 1 ? "White" : "Black") << " to play: ";
         std::cin >> move;
         validated = validateMove(move, positionMap);
@@ -179,10 +195,17 @@ void play(std::vector<Piece *> &positions)
                 currentTurn = 1;
             }
             piecesLocation(pieces, positions);
-        } 
+        }
         else if (move[0] == 'm'){
             int pos = algebraicToPosition(move, positionMap);
-            if (pos >= 0 && positions[pos]){
+            if (move[1] == '*'){
+                std::cout << "All allowed moves for " << (currentTurn == 1 ? "White" : "Black") << ": ";
+                for (auto m : (currentTurn == 1 ? whitePossibleMoves : blackPossibleMoves)){
+                    std::cout << m << " ";
+                }
+                std::cout << "\n";
+            }
+            else if (pos >= 0 && positions[pos]){
                 if (!positions[pos]->allowedMoves.empty()){
                     std::cout << "Allowed moves for this " << positions[pos]->name << ": ";
                     for (auto a : positions[pos]->allowedMoves){

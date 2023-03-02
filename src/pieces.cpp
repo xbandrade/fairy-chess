@@ -411,29 +411,36 @@ void King::updateAllowedMoves(std::vector<Piece *> &positions){
     this->allowedMoves.clear();
     int x = this->position / 8;
     int y = this->position % 8;
-    // 
-    if (x > 0){
-        this->allowedMoves.push_back(calcPos(x - 1, y));
-        if (y > 0){
-            this->allowedMoves.push_back(calcPos(x - 1, y - 1));
+    int pos = calcPos(x - 1, y);
+    int diagPos = calcPos(x - 1, y - 1);
+    if (x > 0 && (!positions[pos] || positions[pos]->player != this->player)){
+        this->allowedMoves.push_back(pos);
+        if (y > 0 && (!positions[diagPos] || positions[diagPos]->player != this->player)){
+            this->allowedMoves.push_back(diagPos);
         }
     }
-    if (x < 7){
-        this->allowedMoves.push_back(calcPos(x + 1, y));
-        if (y < 7){
-            this->allowedMoves.push_back(calcPos(x + 1, y + 1));
+    pos = calcPos(x + 1, y);
+    diagPos = calcPos(x + 1, y + 1);
+    if (x < 7 && (!positions[pos] || positions[pos]->player != this->player)){
+        this->allowedMoves.push_back(pos);
+        if (y < 7 && (!positions[diagPos] || positions[diagPos]->player != this->player)){
+            this->allowedMoves.push_back(diagPos);
         }
     }
-    if (y > 0){
-        this->allowedMoves.push_back(calcPos(x, y - 1));
-        if (x < 7){
-            this->allowedMoves.push_back(calcPos(x + 1, y - 1));
+    pos = calcPos(x, y - 1);
+    diagPos = calcPos(x + 1, y - 1);
+    if (y > 0 && (!positions[pos] || positions[pos]->player != this->player)){
+        this->allowedMoves.push_back(pos);
+        if (x < 7 && (!positions[diagPos] || positions[diagPos]->player != this->player)){
+            this->allowedMoves.push_back(diagPos);
         }
     }
-    if (y < 7){
-        this->allowedMoves.push_back(calcPos(x, y + 1));
-        if (x > 0){
-            this->allowedMoves.push_back(calcPos(x - 1, y + 1));
+    pos = calcPos(x, y + 1);
+    diagPos = calcPos(x - 1, y + 1);
+    if (y < 7 && (!positions[pos] || positions[pos]->player != this->player)){
+        this->allowedMoves.push_back(pos);
+        if (x > 0 && (!positions[diagPos] || positions[diagPos]->player != this->player)){
+            this->allowedMoves.push_back(diagPos);
         }
     }
 }
