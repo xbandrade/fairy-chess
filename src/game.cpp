@@ -416,7 +416,7 @@ void play(std::vector<Piece *> &positions)
             }
             else if (pos >= 0 && positions[pos]){
                 if (!positions[pos]->allowedMoves.empty()){
-                    std::cout << "Allowed moves for this " << positions[pos]->name << ": ";
+                    std::cout << "Allowed squares for this " << positions[pos]->name << " to move: ";
                     for (auto a : positions[pos]->allowedMoves){
                         char alg[2];
                         positionToAlgebraic(a, alg);
