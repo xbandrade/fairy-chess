@@ -1,11 +1,13 @@
 #include "headers/game.hpp"
 #include "headers/board.hpp"
 #include <algorithm>
+#include <unordered_set>
 
 void piecesLocation(std::unordered_map<std::string, std::vector<int>> &pieces, std::vector<Piece *> &positions){
+    pieces.clear();
     for (auto piece : positions){
         if (piece){
-            std::string key = std::to_string(piece->player) + piece->id;
+            std::string key = std::to_string(piece->getPlayer()) + piece->getId();
             pieces[key].push_back(piece->position);
         }
     }
@@ -41,34 +43,54 @@ void positionToAlgebraic(int pos, char alg[2]){
 }
 
 
-std::string validateMove(std::string move, std::unordered_map<std::string, int> &piecesHashMap){
+std::string validateMove(std::string move, std::unordered_map<std::string, int> &piecesHashMap,
+                         int turn, std::unordered_map<int, std::vector<std::string>> possibleMoves){
+    std::unordered_set<std::string> values;
     std::string piecesCodes = "QBKNRCWG";
     std::string files = "abcdefgh";
     std::string ranks = "12345678";
+    std::string validMove;
+    for (const auto &m : possibleMoves){
+        for (const auto &p : m.second){
+            values.insert(p);
+        }
+    }
     if (piecesCodes.find(move[0]) != std::string::npos){
         if (files.find(move[1]) != std::string::npos){
             if (ranks.find(move[2]) != std::string::npos){
-                return move.substr(0, 3);
+                validMove = move.substr(0, 3);
+                if (values.find(validMove) != values.end()){
+                    return validMove;
+                }
             }
         }
         else if (move[1] == 'x'){
             if (files.find(move[2]) != std::string::npos){
                 if (ranks.find(move[3]) != std::string::npos){
-                    return move.substr(0, 4);
+                    validMove = move.substr(0, 1) + move.substr(2, 2);
+                    if (values.find(validMove) != values.end()){
+                        return move.substr(0, 4);
+                    }
                 }
             }
         }
     }
     else if (files.find(move[0]) != std::string::npos){  // Pawn move
         if (ranks.find(move[1]) != std::string::npos){
-            return move.substr(0, 2);
+            validMove = move.substr(0, 2);
+            if (values.find(validMove) != values.end()){
+                return validMove;
+            }
         }
         else if (move[1] == 'x'){
             if (files.find(move[2]) != std::string::npos){
                 int index = files.find(move[0]);
                 if ((index > 0 && (move[2] == files[index - 1])) || (index < 7 && (move[2] == files[index + 1]))){
                     if (ranks.find(move[3]) != std::string::npos){
-                        return move.substr(0, 4);
+                        validMove = move.substr(0, 4);
+                        if (values.find(validMove) != values.end() || values.find(move.substr(2, 2)) != values.end()){
+                            return validMove;
+                        }
                     }
                 }
             }
@@ -78,31 +100,135 @@ std::string validateMove(std::string move, std::unordered_map<std::string, int> 
 }
 
 void updateAllPossibleMoves(std::vector<Piece *> &positions, 
-                            std::unordered_set<std::string> &blackPossibleMoves,
-                            std::unordered_set<std::string> &whitePossibleMoves){
+                            std::unordered_map<int, std::vector<std::string>> &blackPossibleMoves,
+                            std::unordered_map<int, std::vector<std::string>> &whitePossibleMoves){
     blackPossibleMoves.clear();
     whitePossibleMoves.clear();
+    King *blackKing, *whiteKing;
     char alg[2];
     for (auto piece : positions){
         if (piece){
-            std::string pieceId = piece->id == "P" ? "" : piece->id;
+            std::string pieceId = piece->getId() == "P" ? "" : piece->getId();
+            if (King *king = dynamic_cast<King *>(piece)){
+                if (piece->getPlayer() == 1){
+                    whiteKing = king;
+                }
+                else{
+                    blackKing = king;
+                }
+                continue;
+            }
             piece->updateAllowedMoves(positions);
             for (auto p : piece->allowedMoves){
                 positionToAlgebraic(p, alg);
-                if (piece->player == 1){
-                    whitePossibleMoves.insert(pieceId + std::string(alg, 2));
+                if (piece->getPlayer() == 1){
+                    whitePossibleMoves[p].push_back(pieceId + std::string(alg, 2));
                 }
                 else{
-                    blackPossibleMoves.insert(pieceId + std::string(alg, 2));
+                    blackPossibleMoves[p].push_back(pieceId + std::string(alg, 2));
                 }
             }
         }
+    }
+    blackKing->updateAllowedMoves(positions, blackPossibleMoves, whitePossibleMoves);
+    whiteKing->updateAllowedMoves(positions, whitePossibleMoves, blackPossibleMoves);
+}
+
+
+bool simulateMove(std::string move, std::vector<Piece *> &positions, 
+              std::unordered_map<std::string, std::vector<int>> &pieces, 
+              std::unordered_map<std::string, int> &positionMap, int turn, King *king,
+              std::unordered_map<int, std::vector<std::string>> &blackPossibleMoves,
+              std::unordered_map<int, std::vector<std::string>> &whitePossibleMoves
+              ){
+    std::string piecesCodes = "QBKNRCWG";
+    std::string files = "abcdefgh";
+    std::string ranks = "12345678";
+    std::string newPos;
+    std::string moveCode;
+    std::vector<Piece *> threats;
+    std::vector<Piece *> snapshot = positions;
+    std::vector<int> oldAllowedMoves;
+    std::vector<int> threatOldAllowedMoves;
+    int newPosInt;
+    newPos = (piecesCodes.find(move[0]) != std::string::npos) ? move.substr(1, 2) : move.substr(0, 2);
+    newPosInt = algebraicToPosition(newPos, positionMap);
+    moveCode = std::to_string(turn) + ((piecesCodes.find(move[0]) != std::string::npos) ? move.at(0) : 'P');
+    if(!pieces[moveCode].empty()){
+        for (auto pos : pieces[moveCode]){
+            if (std::count(positions[pos]->allowedMoves.begin(), positions[pos]->allowedMoves.end(), newPosInt)){
+                int oldPos = positions[pos]->position;
+                positions[pos]->position = newPosInt;
+                positions[newPosInt] = positions[pos];
+                positions[pos] = nullptr;
+                oldAllowedMoves = positions[newPosInt]->allowedMoves;
+                positions[newPosInt]->updateAllowedMoves(positions);
+                for (auto threat : king->getThreats()){
+                    if (threat->position != newPosInt){  // threatening piece has not been taken
+                        threatOldAllowedMoves = threat->allowedMoves;
+                        threat->updateAllowedMoves(positions);
+                        if (std::count(threat->allowedMoves.begin(), threat->allowedMoves.end(), king->position)){
+                            threat->allowedMoves = threatOldAllowedMoves;
+                            positions[newPosInt]->position = oldPos;
+                            positions[newPosInt]->allowedMoves = oldAllowedMoves;
+                            positions = snapshot;
+                            return true; // still in check
+                        }
+                        threat->allowedMoves = threatOldAllowedMoves;
+                    }
+                    else{ // threatening piece was taken, check if king is still in check by another piece
+                        updateAllPossibleMoves(positions, blackPossibleMoves, whitePossibleMoves);
+                        std::unordered_map<int, std::vector<std::string>> &opponentMoves = (turn == 1 ? 
+                                                                                            blackPossibleMoves : 
+                                                                                            whitePossibleMoves);
+                        if (opponentMoves.find(king->position) != opponentMoves.end()){
+                            positions[newPosInt]->position = oldPos;
+                            positions[newPosInt]->allowedMoves = oldAllowedMoves;
+                            positions = snapshot;
+                            updateAllPossibleMoves(positions, blackPossibleMoves, whitePossibleMoves);
+                            return true; // still in check by another piece
+                        }
+                    }
+                }
+                positions[newPosInt]->position = oldPos;
+                positions[newPosInt]->allowedMoves = oldAllowedMoves;
+                positions = snapshot;
+            }
+        }
+    }
+    return false;
+}
+
+void forceKingOutOfCheck(std::vector<Piece *> &positions, 
+              std::unordered_map<std::string, std::vector<int>> &pieces, 
+              std::unordered_map<std::string, int> &positionMap, int turn, King *king,
+              std::unordered_map<int, std::vector<std::string>> &blackPossibleMoves,
+              std::unordered_map<int, std::vector<std::string>> &whitePossibleMoves
+              ){
+    std::unordered_map<int, std::vector<std::string>> legalMoves;
+    for (const auto &p : (turn == 1 ? whitePossibleMoves : blackPossibleMoves)){
+        for (const auto &value : p.second){
+            bool stillInCheck = simulateMove(value, positions, pieces, positionMap, turn, king, 
+                                             blackPossibleMoves, whitePossibleMoves);
+            if (!stillInCheck){
+                legalMoves[p.first].push_back(value);
+            }
+        }
+    }
+    if (turn == 1){
+        whitePossibleMoves = legalMoves;
+    }
+    else{
+        blackPossibleMoves = legalMoves;
     }
 }
 
 bool playMove(std::string move, std::vector<Piece *> &positions, 
               std::unordered_map<std::string, std::vector<int>> &pieces, 
-              std::unordered_map<std::string, int> &positionMap, int turn){
+              std::unordered_map<std::string, int> &positionMap, int turn, King *king,
+              std::unordered_map<int, std::vector<std::string>> &blackPossibleMoves,
+              std::unordered_map<int, std::vector<std::string>> &whitePossibleMoves
+              ){
     std::string piecesCodes = "QBKNRCWG";
     std::string files = "abcdefgh";
     std::string ranks = "12345678";
@@ -126,7 +252,9 @@ bool playMove(std::string move, std::vector<Piece *> &positions,
                 }
                 positions[newPosInt] = positions[pos];
                 positions[pos] = nullptr;
-                std::cout << pieceName << " moved from " << oldPos << " to " << newPos << "!\n";
+                std::cout << pieceName << " moved from " << oldPos << " to " << newPos << "!";
+                piecesLocation(pieces, positions);
+                updateAllPossibleMoves(positions, blackPossibleMoves, whitePossibleMoves);
                 return true;
             }
         }
@@ -156,7 +284,9 @@ bool playMove(std::string move, std::vector<Piece *> &positions,
                     }
                     positions[newPosInt] = positions[pos];
                     positions[pos] = nullptr;
-                    std::cout << "Pawn moved from " << oldPos << " to " << newPos << "!\n";
+                    std::cout << "Pawn moved from " << oldPos << " to " << newPos << "!";
+                    piecesLocation(pieces, positions);
+                    updateAllPossibleMoves(positions, blackPossibleMoves, whitePossibleMoves);
                     return true;
                 }
             }
@@ -166,14 +296,59 @@ bool playMove(std::string move, std::vector<Piece *> &positions,
     return false;
 }
 
+void findKingThreats(King *king, std::vector<Piece *> &positions){
+    king->clearThreats();
+    for (auto piece : positions){
+        if (piece){
+            if (piece->getPlayer() == king->getPlayer() || dynamic_cast<King *>(piece)){
+                continue;
+            }
+            for (auto pos : piece->allowedMoves){
+                if (pos == king->position){
+                    king->setThreats(piece);
+                }
+            }
+        }
+    }
+}
+
+
+void mateInOne(std::vector<Piece *> &positions, 
+              std::unordered_map<std::string, std::vector<int>> &pieces, 
+              std::unordered_map<std::string, int> &positionMap, King *blackKing, King *whiteKing,
+              std::unordered_map<int, std::vector<std::string>> &blackPossibleMoves,
+              std::unordered_map<int, std::vector<std::string>> &whitePossibleMoves
+              ){
+    playMove("d4", positions, pieces, positionMap, 1, whiteKing, blackPossibleMoves, whitePossibleMoves);
+    std::cout << "\n";
+    playMove("e5", positions, pieces, positionMap, 2, blackKing, blackPossibleMoves, whitePossibleMoves);
+    std::cout << "\n";
+    playMove("g4", positions, pieces, positionMap, 1, whiteKing, blackPossibleMoves, whitePossibleMoves);
+    std::cout << "\n";
+    playMove("Qf6", positions, pieces, positionMap, 2, blackKing, blackPossibleMoves, whitePossibleMoves);
+    std::cout << "\n";
+    playMove("Wg3", positions, pieces, positionMap, 1, whiteKing, blackPossibleMoves, whitePossibleMoves);
+    std::cout << "\n";
+    playMove("e4", positions, pieces, positionMap, 2, blackKing, blackPossibleMoves, whitePossibleMoves);
+    std::cout << "\n";
+    playMove("d5", positions, pieces, positionMap, 1, whiteKing, blackPossibleMoves, whitePossibleMoves);
+    std::cout << "\n";
+    playMove("e3", positions, pieces, positionMap, 2, blackKing, blackPossibleMoves, whitePossibleMoves);
+    std::cout << "\n";
+    playMove("d6", positions, pieces, positionMap, 1, whiteKing, blackPossibleMoves, whitePossibleMoves);
+}
+
 void play(std::vector<Piece *> &positions)
 {
     std::string move, validated;
     std::unordered_map<std::string, std::vector<int>> pieces;
     std::unordered_map<std::string, int> positionMap;
-    std::unordered_set<std::string> whitePossibleMoves, blackPossibleMoves;
+    std::unordered_map<int, std::vector<std::string>> whitePossibleMoves, blackPossibleMoves;
     createDefaultPieces(1, positions);
     createDefaultPieces(2, positions); 
+    King *blackKing = dynamic_cast<King *>(positions[60]);
+    King *whiteKing = dynamic_cast<King *>(positions[4]);
+    updateAllPossibleMoves(positions, blackPossibleMoves, whitePossibleMoves);
     piecesLocation(pieces, positions);
     algebraicMap(positionMap);
     bool checkmate = false;
@@ -181,27 +356,61 @@ void play(std::vector<Piece *> &positions)
     int currentTurn = 1;
     while(!checkmate && !draw){
         printBoard(positions);
-        updateAllPossibleMoves(positions, blackPossibleMoves, whitePossibleMoves);
         std::cout << "Enter a move - " << (currentTurn == 1 ? "White" : "Black") << " to play: ";
         std::cin >> move;
-        validated = validateMove(move, positionMap);
+        validated = validateMove(move, positionMap, currentTurn, (currentTurn == 1 ? whitePossibleMoves : blackPossibleMoves));
         if (!validated.empty()){
             if (currentTurn == 1){
-                if (playMove(validated, positions, pieces, positionMap, 1)){
+                if (playMove(validated, positions, pieces, positionMap, 1, whiteKing, blackPossibleMoves, whitePossibleMoves)){
+                    if (blackKing->getIsInCheck(whitePossibleMoves)){
+                        findKingThreats(blackKing, positions);
+                        forceKingOutOfCheck(positions, pieces, positionMap, 2, 
+                                            blackKing, blackPossibleMoves, whitePossibleMoves);
+                        if (blackPossibleMoves.empty()){
+                            checkmate = true;
+                            blackKing->setIsCheckmated(true);
+                            blackKing->setId("#");
+                            std::cout << " # CHECKMATE # ";
+                            printBoard(positions);
+                            break;
+                        }
+                        else {
+                            std::cout << " +++ CHECK +++ ";
+                        }
+                    }
+                    std::cout << "\n";
                     currentTurn = 2;
                 }
             }
-            else if (playMove(validated, positions, pieces, positionMap, 2)){
+            else if (playMove(validated, positions, pieces, positionMap, 2, blackKing, blackPossibleMoves, whitePossibleMoves)){
+                if (whiteKing->getIsInCheck(blackPossibleMoves)){
+                    findKingThreats(whiteKing, positions);        
+                    forceKingOutOfCheck(positions, pieces, positionMap, 1, 
+                                        whiteKing, blackPossibleMoves, whitePossibleMoves);     
+                        if (whitePossibleMoves.empty()){   
+                            checkmate = true;
+                            whiteKing->setIsCheckmated(true);
+                            whiteKing->setId("#");
+                            std::cout << " ### CHECKMATE ### ";
+                            printBoard(positions);
+                            break;
+                        }
+                        else{
+                            std::cout << " +++ CHECK +++ ";
+                        }
+                }
+                std::cout << "\n";
                 currentTurn = 1;
             }
-            piecesLocation(pieces, positions);
         }
         else if (move[0] == 'm'){
             int pos = algebraicToPosition(move, positionMap);
             if (move[1] == '*'){
                 std::cout << "All allowed moves for " << (currentTurn == 1 ? "White" : "Black") << ": ";
-                for (auto m : (currentTurn == 1 ? whitePossibleMoves : blackPossibleMoves)){
-                    std::cout << m << " ";
+                for (const auto &m : (currentTurn == 1 ? whitePossibleMoves : blackPossibleMoves)){
+                    for (const auto &value : m.second){
+                        std::cout << value << " ";
+                    }
                 }
                 std::cout << "\n";
             }
@@ -220,11 +429,27 @@ void play(std::vector<Piece *> &positions)
                 }
             }
             else{
-                std::cout << move << " is an invalid move!\n";
+                std::cout << move << " is an invalid move! ";
+                if((currentTurn == 1 ? whiteKing : blackKing)->getIsInCheck()){
+                    std::cout << " +++ CHECK +++ \n";
+                }
             }
+        }
+        else if (move == "M1"){  // go to a mate in 1 position, black to play and win
+            mateInOne(positions, pieces, positionMap, blackKing, whiteKing, blackPossibleMoves, whitePossibleMoves);
+            
+            std::cout << "\nM1 position loaded\n";
+            currentTurn = 2;
         }
         else{
             std::cout << move << " is an invalid move!\n";
+            if((currentTurn == 1 ? whiteKing : blackKing)->getIsInCheck()){
+                std::cout << " +++ CHECK +++ \n";
+            }
         }
+    }
+    if (checkmate){
+        std::cout << "\n# CHECKMATE # - ";
+        std::cout << "Player " << (whiteKing->getIsCheckmated() ? 2 : 1) << " won!\n\n";
     }
 }

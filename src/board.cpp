@@ -22,8 +22,8 @@ void printBoard(std::vector<Piece *> &positions){
                     const char *squareColor = isWhiteSquare ? WHITE_SQUARE : BLACK_SQUARE;
                     std::cout << squareColor;
                     if (positions[i * 8 + j]){
-                        int player = positions[i * 8 + j]->player;
-                        std::string id = positions[i * 8 + j]->id;
+                        int player = positions[i * 8 + j]->getPlayer();
+                        std::string id = positions[i * 8 + j]->getId();
                         std::cout << (player == 1 ? "\033[1;100;97m " : "\033[46;30m ") << id << " \033[0m";
                     }
                     else{

@@ -2,14 +2,14 @@
 #define PIECES_H
 #include <string>
 #include <vector>
-#include <unordered_set>
+#include <unordered_map>
 
 class Piece{
     private:
-    public:
         int player;
-        int position;
         std::string id;
+    public:
+        int position;
         std::string name;
         std::vector<int> allowedMoves;
         Piece(int pos, int player_id);
@@ -17,6 +17,9 @@ class Piece{
         virtual void updateAllowedMoves(std::vector<Piece *> &positions) = 0;
         virtual bool getHasMoved();
         virtual void setHasMoved(bool moved);
+        std::string getId();
+        void setId(std::string new_id);
+        int getPlayer();
         virtual ~Piece(){}
 };
 
@@ -74,13 +77,22 @@ class Grasshopper : public Piece{
 
 class King : public Piece{
     private:
-        bool isChecked;
+        bool isInCheck;
         bool isCheckmated;
+        std::vector<Piece *> threats;
     public:
         King(int pos, int player_id);
         void updateAllowedMoves(std::vector<Piece *> &positions);
-        void updateAllowedMoves(std::vector<Piece *> &positions, std::unordered_set<int> &positionsUnderAttack);
-        bool isInCheck;
+        void updateAllowedMoves(std::vector<Piece *> &positions, 
+                                std::unordered_map<int, std::vector<std::string>> &thisPossibleMoves,
+                                std::unordered_map<int, std::vector<std::string>> &opponentPossibleMoves);
+        bool getIsInCheck();
+        bool getIsInCheck(std::unordered_map<int, std::vector<std::string>> &opponentPossibleMoves);
+        void setThreats(Piece *piece);
+        std::vector<Piece *> getThreats();
+        void clearThreats();
+        bool getIsCheckmated();
+        void setIsCheckmated(bool checkmate);
 };
 
 
