@@ -1,0 +1,18 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "C++ Launch (GDB)",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/fairy-chess",
+            "args": [],
+            "<EUGPSCoordinates>stopAtEntry</EUGPSCoordinates>":"false",
+            "cwd": "${workspaceFolder}",
+            "<EUGPSCoordinates>environment</EUGPSCoordinates>":[],
+            "<EUGPSCoordinates>externalConsole</EUGPSCoordinates>":"false",
+            "<EUGPSCoordinates>MIMode</EUGPSCoordinates>":"gdb",
+            "<EUGPSCoordinates>MIDebuggerPath</EUGPSCoordinates>":"/usr/bin/gdb"
+        }
+    ]
+}

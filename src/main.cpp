@@ -5,12 +5,12 @@
 #include "headers/game.hpp"
 
 int main(void){
-    std::cout << "\n~~~ ✰✰ FAIRY CHESS ✰✰ ~~~\n";
+    std::cout << "\n✰✰✰ FAIRY CHESS ✰✰✰    \n\n";
     int option;
     std::string options = "1 - Player vs Player\n2 - Player vs Bot\n3 - Help\n4 - Exit\n-> ";
     std::cout << "Choose an option:\n" << options;
     std::cin >> option;
-    while (std::cin.fail() || option < 0 || option > 3) {
+    while (std::cin.fail() || option < 0 || option > 4) {
         std::cout << "\nInvalid input. Enter a valid option:\n" << options;
         std::cin.clear();
         std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
@@ -28,7 +28,7 @@ int main(void){
             return 0;
         }
         case 3:{
-            std::cout << "\n~~~ ✰✰ FAIRY CHESS ✰✰ ~~~\n";
+            std::cout << "\n    ✰✰✰ FAIRY CHESS ✰✰✰    \n";
             std::cout << "\nFairy Chess is a type of chess variant that modifies some rules, pieces and/or \n"
                       << "the board of traditional chess!\n"
                       << "This implementation of Fairy Chess includes three new Fairy Pieces with unique \n"
@@ -53,7 +53,8 @@ int main(void){
                       << "\tthat position: if the Wazir is on b6, 'mb6' will show all available moves \n"
                       << "\tfor that Wazir.\n"
                       << "➜Entering 'm*' will show all possible moves for the current player.\n"
-                      << "➜Entering 'M1' will take you to a mate in 1 position for the black pieces.\n\n";
+                      << "➜Entering 'M1B' will take you to a mate in 1 position for the black pieces.\n\n"
+                      << "➜Entering 'M1W' will take you to a mate in 1 position for the white pieces.\n\n";
             break;
         }
         case 4:{
