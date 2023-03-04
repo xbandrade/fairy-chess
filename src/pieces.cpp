@@ -10,8 +10,12 @@ Piece::Piece(int pos, int player_id){
     this->player = player_id;
 }
 
-int Piece::getPos(){
-    return 0;
+int Piece::getPosition(){
+    return this->position;
+}
+
+void Piece::setPosition(int pos){
+    this->position = pos;
 }
 
 bool Piece::getHasMoved(){
@@ -51,8 +55,8 @@ void Pawn::setHasMoved(bool moved)
 void Pawn::updateAllowedMoves(std::vector<Piece *> &positions){
     // Moves 1 (or 2) forward, captures diagonally
     this->allowedMoves.clear();
-    int x = this->position / 8;
-    int y = this->position % 8;
+    int x = this->getPosition() / 8;
+    int y = this->getPosition() % 8;
     if (this->getPlayer() == 1){
         int pos = calcPos(x + 1, y);
         if (x < 7 && !positions[pos]){
@@ -100,8 +104,8 @@ Knight::Knight(int pos, int player_id) : Piece(pos, player_id){
 void Knight::updateAllowedMoves(std::vector<Piece *> &positions){
     // Moves in an L shape (1-2), can jump over pieces
     this->allowedMoves.clear();
-    int x = this->position / 8;
-    int y = this->position % 8;
+    int x = this->getPosition() / 8;
+    int y = this->getPosition() % 8;
     int pos = calcPos(x - 2, y - 1);
     if (x > 1 && y > 0 && (!positions[pos] || (positions[pos]->getPlayer() != this->getPlayer()))){
         this->allowedMoves.push_back(pos);
@@ -157,8 +161,8 @@ bool pieceMovement(int i, int j, std::vector<Piece *> &positions, Piece *piece){
 void Bishop::updateAllowedMoves(std::vector<Piece *> &positions){
     // Moves diagonally
     this->allowedMoves.clear();
-    int x = this->position / 8;
-    int y = this->position % 8;
+    int x = this->getPosition() / 8;
+    int y = this->getPosition() % 8;
     for (int i = x - 1, j = y - 1; i >= 0 && j >= 0; i--, j--){   
         if (!pieceMovement(i, j, positions, this)){
             break;
@@ -190,8 +194,8 @@ Rook::Rook(int pos, int player_id) : Piece(pos, player_id){
 void Rook::updateAllowedMoves(std::vector<Piece *> &positions){
     // Moves horizontally/vertically
     this->allowedMoves.clear();
-    int x = this->position / 8;
-    int y = this->position % 8;
+    int x = this->getPosition() / 8;
+    int y = this->getPosition() % 8;
     for (int i = x - 1; i >= 0; i--){
         if (!pieceMovement(i, y, positions, this)){
             break;
@@ -224,8 +228,8 @@ Queen::Queen(int pos, int player_id) : Piece(pos, player_id){
 void Queen::updateAllowedMoves(std::vector<Piece *> &positions){
     // Moves horizontally/vertically/diagonally
     this->allowedMoves.clear();
-    int x = this->position / 8;
-    int y = this->position % 8;
+    int x = this->getPosition() / 8;
+    int y = this->getPosition() % 8;
     for (int i = x - 1; i >= 0; i--){
         if (!pieceMovement(i, y, positions, this)){
             break;
@@ -279,8 +283,8 @@ Wazir::Wazir(int pos, int player_id) : Piece(pos, player_id){
 void Wazir::updateAllowedMoves(std::vector<Piece *> &positions){
     // Moves 1 square horizontally/vertically
     this->allowedMoves.clear();
-    int x = this->position / 8;
-    int y = this->position % 8;
+    int x = this->getPosition() / 8;
+    int y = this->getPosition() % 8;
     int pos = calcPos(x - 1, y);
     if (x > 0 && (!positions[pos] || (positions[pos]->getPlayer() != this->getPlayer()))){
         this->allowedMoves.push_back(pos);
@@ -308,8 +312,8 @@ Camel::Camel(int pos, int player_id) : Piece(pos, player_id){
 void Camel::updateAllowedMoves(std::vector<Piece *> &positions){
     // Moves in a long L shape (1-3), can jump over pieces
     this->allowedMoves.clear();
-    int x = this->position / 8;
-    int y = this->position % 8;
+    int x = this->getPosition() / 8;
+    int y = this->getPosition() % 8;
     int pos = calcPos(x - 3, y - 1);
     if (x > 2 && y > 0 && (!positions[pos] || (positions[pos]->getPlayer() != this->getPlayer()))){
         this->allowedMoves.push_back(calcPos(x - 3, y - 1));
@@ -367,8 +371,8 @@ void Grasshopper::updateAllowedMoves(std::vector<Piece *> &positions){
     // Moves horizontally/vertically/diagonally, but can only move if
     // it's possible to jump over another piece, then it lands immediately beyond that piece
     this->allowedMoves.clear();
-    int x = this->position / 8;
-    int y = this->position % 8;
+    int x = this->getPosition() / 8;
+    int y = this->getPosition() % 8;
     for (int i = x - 1; i > 0; i--){
         if (grasshopperMovement(i, y, i - 1, y, positions, this)){
             break;
@@ -422,8 +426,8 @@ King::King(int pos, int player_id) : Piece(pos, player_id){
 void King::updateAllowedMoves(std::vector<Piece *> &positions){
     // Moves 1 square in any direction, cannot be captured
     this->allowedMoves.clear();
-    int x = this->position / 8;
-    int y = this->position % 8;
+    int x = this->getPosition() / 8;
+    int y = this->getPosition() % 8;
     int pos = calcPos(x - 1, y);
     int diagPos = calcPos(x - 1, y - 1);
     if (x > 0 && (!positions[pos] || positions[pos]->getPlayer() != this->getPlayer())){
@@ -478,8 +482,8 @@ void King::updateAllowedMoves(std::vector<Piece *> &positions,
                         std::unordered_map<int, std::vector<std::string>> &opponentPossibleMoves){
     // Moves 1 square in any direction, cannot be captured
     this->allowedMoves.clear();
-    int x = this->position / 8;
-    int y = this->position % 8;
+    int x = this->getPosition() / 8;
+    int y = this->getPosition() % 8;
     char alg[2];
     int pos = calcPos(x - 1, y);
     int diagPos = calcPos(x - 1, y - 1);
@@ -521,7 +525,7 @@ bool King::getIsInCheck(){
 }
 
 bool King::getIsInCheck(std::unordered_map<int, std::vector<std::string>> &opponentPossibleMoves){
-    if (opponentPossibleMoves.find(this->position) != opponentPossibleMoves.end()){
+    if (opponentPossibleMoves.find(this->getPosition()) != opponentPossibleMoves.end()){
         this->isInCheck = true;
     }
     else{

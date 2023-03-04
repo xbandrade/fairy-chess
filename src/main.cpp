@@ -20,12 +20,14 @@ int main(void){
         case 1:{
             std::vector<Piece *> positions(64, nullptr);
             std::cout << "\n           ~ ✰ FAIRY CHESS ✰ ~\n";
-            play(positions);
+            play(positions, false);
             break;
         }
         case 2:{
-            std::cout << "This is not available yet!\n";
-            return 0;
+            std::vector<Piece *> positions(64, nullptr);
+            std::cout << "\n           ~ ✰ FAIRY CHESS ✰ ~\n";
+            play(positions, true);
+            break;
         }
         case 3:{
             std::cout << "\n    ✰✰✰ FAIRY CHESS ✰✰✰    \n";
@@ -44,11 +46,12 @@ int main(void){
                       << "\tIf there is no pieces to hop over, the Grasshopper cannot move!\n"
                       << "\tIts symbol in algebraic notation is G and it is worth as much as a Knight.\n"
                       << "All the other pieces have their traditional movement pattern and exchange value.\n"
+                      << "The board and other chess rules remain unchanged.\n"
                       << "Moves:\n"
                       << "You can move a piece by using its algebraic notation:\n"
                       << "\tQe5 moves the Queen to e5\n"
                       << "\tGxd4 moves the Grasshopper to d4, capturing a piece\n"
-                      << "\th3 moves the a Pawn to h3\n"
+                      << "\th3 moves the Pawn to h3\n"
                       << "➜Entering 'm' followed by a position will show all possible moves for the piece on \n"
                       << "\tthat position: if the Wazir is on b6, 'mb6' will show all available moves \n"
                       << "\tfor that Wazir.\n"

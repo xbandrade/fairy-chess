@@ -7,13 +7,14 @@
 class Piece{
     private:
         int player;
+        int position;
         std::string id;
     public:
-        int position;
         std::string name;
         std::vector<int> allowedMoves;
         Piece(int pos, int player_id);
-        int getPos();
+        int getPosition();
+        void setPosition(int pos);
         virtual void updateAllowedMoves(std::vector<Piece *> &positions) = 0;
         virtual bool getHasMoved();
         virtual void setHasMoved(bool moved);
