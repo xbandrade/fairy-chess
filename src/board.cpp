@@ -4,7 +4,8 @@
 #define BLACK_SQUARE_LINE "     "
 #define BLACK_SQUARE " "
 
-Board::Board() : pieces(64, nullptr){
+Board::Board() : pieces(64, nullptr), gameStarted(false){
+    createAlgebraicMap();
     createDefaultPieces(1);
     createDefaultPieces(2);
 }
@@ -53,9 +54,24 @@ void Board::printBoard(){
     std::cout << "    A    B    C    D    E    F    G    H   \n";
 }
 
-Board::~Board(){
+void Board::clearBoard(){
     for (auto piece : pieces){
-        delete piece;
+        if (piece){
+            delete piece;
+        }
+    }
+    pieces.assign(pieces.size(), nullptr);
+    createDefaultPieces(1);
+    createDefaultPieces(2);
+}
+
+void Board::updatePiecesLocation(){
+    piecesLocation.clear();
+    for (auto piece : pieces){
+        if (piece){
+            std::string key = std::to_string(piece->getPlayer()) + piece->getId();
+            piecesLocation[key].push_back(piece->getPosition());
+        }
     }
 }
 
@@ -104,3 +120,19 @@ void Board::createDefaultPieces(int player){
     }
 } 
 
+
+void Board::createAlgebraicMap(){
+    std::string files = "abcdefgh";
+    int k = 0;
+    for (int i = 1; i <= 8; i++){
+        for (int j = 0; j < 8; j++, k++){
+            positionMap[files[j] + std::to_string(i)] = k;
+        }
+    }
+}
+
+Board::~Board(){
+    for (auto piece : pieces){
+        delete piece;
+    }
+}

@@ -5,7 +5,16 @@
 #include <vector>
 #include "piece.hpp"
 
-
-void createDefaultPieces(int player, std::vector<Piece *> &pieces);
+class Player{
+    private:
+        int id;
+        bool isBot;
+        std::string color;
+    public:
+        Player(int playerId, bool isBot);
+        std::unordered_map<int, std::vector<std::string>> possibleMoves;
+        int getId();
+        std::string getColor();
+};
 
 #endif

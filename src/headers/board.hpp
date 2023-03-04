@@ -8,10 +8,16 @@
 class Board{
     private:
         void createDefaultPieces(int player);
+        void createAlgebraicMap();
     public: 
-        Board();
         std::vector<Piece *> pieces;
+        bool gameStarted;
+        Board();
+        std::unordered_map<std::string, int> positionMap;
+        std::unordered_map<std::string, std::vector<int>> piecesLocation;
+        void updatePiecesLocation();
         void printBoard();
+        void clearBoard();
         ~Board();
 };
 
