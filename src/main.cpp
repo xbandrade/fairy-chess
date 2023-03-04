@@ -1,7 +1,7 @@
 #include <iostream>
 #include "headers/board.hpp"
-#include "headers/players.hpp"
-#include "headers/pieces.hpp"
+#include "headers/player.hpp"
+#include "headers/piece.hpp"
 #include "headers/game.hpp"
 
 int main(void){
@@ -18,15 +18,15 @@ int main(void){
     }
     switch (option){
         case 1:{
-            std::vector<Piece *> positions(64, nullptr);
+            Board board;
             std::cout << "\n           ~ ✰ FAIRY CHESS ✰ ~\n";
-            play(positions, false);
+            play(board, false);
             break;
         }
         case 2:{
-            std::vector<Piece *> positions(64, nullptr);
+            Board board;
             std::cout << "\n           ~ ✰ FAIRY CHESS ✰ ~\n";
-            play(positions, true);
+            play(board, true);
             break;
         }
         case 3:{

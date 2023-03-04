@@ -5,12 +5,12 @@
 #include <cstdlib>
 #include <ctime>
 
-void piecesLocation(std::unordered_map<std::string, std::vector<int>> &pieces, std::vector<Piece *> &positions){
-    pieces.clear();
-    for (auto piece : positions){
+void getPiecesLocation(Board &board, std::unordered_map<std::string, std::vector<int>> &piecesLocation){
+    piecesLocation.clear();
+    for (auto piece : board.pieces){
         if (piece){
             std::string key = std::to_string(piece->getPlayer()) + piece->getId();
-            pieces[key].push_back(piece->getPosition());
+            piecesLocation[key].push_back(piece->getPosition());
         }
     }
 }
@@ -101,7 +101,7 @@ std::string validateMove(std::string move, std::unordered_map<std::string, int> 
     return "";
 }
 
-void updateAllPossibleMoves(std::vector<Piece *> &positions, 
+void updateAllPossibleMoves(Board &board,
                             std::unordered_map<int, std::vector<std::string>> &blackPossibleMoves,
                             std::unordered_map<int, std::vector<std::string>> &whitePossibleMoves){
     blackPossibleMoves.clear();
@@ -109,7 +109,7 @@ void updateAllPossibleMoves(std::vector<Piece *> &positions,
     King *blackKing, *whiteKing;
     std::string newMove, pieceId, file;
     char alg[2];
-    for (auto piece : positions){
+    for (auto piece : board.pieces){
         if (piece){
             if (King *king = dynamic_cast<King *>(piece)){
                 if (piece->getPlayer() == 1){
@@ -120,7 +120,7 @@ void updateAllPossibleMoves(std::vector<Piece *> &positions,
                 }
                 continue;
             }
-            piece->updateAllowedMoves(positions);
+            piece->updateAllowedMoves(board.pieces);
             pieceId = piece->getId();
             if (pieceId == "P"){
                 pieceId = "";
@@ -129,7 +129,7 @@ void updateAllPossibleMoves(std::vector<Piece *> &positions,
             for (auto p : piece->allowedMoves){
                 positionToAlgebraic(p, alg);
                 newMove = pieceId + std::string(alg, 2);
-                if (pieceId == "" && positions[p] && positions[p]->getPlayer() != piece->getPlayer()){
+                if (pieceId == "" && board.pieces[p] && board.pieces[p]->getPlayer() != piece->getPlayer()){
                     newMove = file + "x" + newMove;
                 }
                 if (piece->getPlayer() == 1){
@@ -141,13 +141,13 @@ void updateAllPossibleMoves(std::vector<Piece *> &positions,
             }
         }
     }
-    blackKing->updateAllowedMoves(positions, blackPossibleMoves, whitePossibleMoves);
-    whiteKing->updateAllowedMoves(positions, whitePossibleMoves, blackPossibleMoves);
+    blackKing->updateAllowedMoves(board.pieces, blackPossibleMoves, whitePossibleMoves);
+    whiteKing->updateAllowedMoves(board.pieces, whitePossibleMoves, blackPossibleMoves);
 }
 
 
-bool simulateMove(std::string move, std::vector<Piece *> &positions, 
-              std::unordered_map<std::string, std::vector<int>> &pieces, 
+bool simulateMove(std::string move, Board &board,
+              std::unordered_map<std::string, std::vector<int>> &piecesLocation, 
               std::unordered_map<std::string, int> &positionMap, int turn, King *king,
               std::unordered_map<int, std::vector<std::string>> &blackPossibleMoves,
               std::unordered_map<int, std::vector<std::string>> &whitePossibleMoves){
@@ -157,61 +157,70 @@ bool simulateMove(std::string move, std::vector<Piece *> &positions,
     std::string newPos;
     std::string moveCode;
     std::vector<Piece *> threats;
-    std::vector<Piece *> snapshot = positions;
+    std::vector<Piece *> snapshot = board.pieces;
     std::vector<int> oldAllowedMoves;
     std::vector<int> threatOldAllowedMoves;
-    int newPosInt;
-    newPos = (piecesCodes.find(move[0]) != std::string::npos) ? move.substr(1, 2) : move.substr(0, 2);
+    std::unordered_map<int, std::vector<std::string>> &opponentMoves = (turn == 1 ? blackPossibleMoves : whitePossibleMoves);
+    int newPosInt, originalFile;
+    bool isPawnCapture = false;
+    if (files.find(move[0]) != std::string::npos && move[1] == 'x'){  // pawn capture
+        newPos = move.substr(2, 2);
+        isPawnCapture = true;
+        originalFile = files.find(move[0]);
+    }
+    else{
+        newPos = (piecesCodes.find(move[0]) != std::string::npos) ? move.substr(1, 2) : move.substr(0, 2);
+    }
     newPosInt = algebraicToPosition(newPos, positionMap);
     moveCode = std::to_string(turn) + ((piecesCodes.find(move[0]) != std::string::npos) ? move.at(0) : 'P');
-    if(!pieces[moveCode].empty()){
-        for (auto pos : pieces[moveCode]){
-            if (std::count(positions[pos]->allowedMoves.begin(), positions[pos]->allowedMoves.end(), newPosInt)){
-                int oldPos = positions[pos]->getPosition();
-                positions[pos]->setPosition(newPosInt);
-                positions[newPosInt] = positions[pos];
-                positions[pos] = nullptr;
-                oldAllowedMoves = positions[newPosInt]->allowedMoves;
-                positions[newPosInt]->updateAllowedMoves(positions);
+    if(!piecesLocation[moveCode].empty()){
+        for (auto pos : piecesLocation[moveCode]){
+            if (std::count(board.pieces[pos]->allowedMoves.begin(), board.pieces[pos]->allowedMoves.end(), newPosInt)){
+                if (isPawnCapture && ((board.pieces[pos]->getPosition() % 8) != originalFile)){
+                    continue;
+                }
+                int oldPos = board.pieces[pos]->getPosition();
+                board.pieces[pos]->setPosition(newPosInt);
+                board.pieces[newPosInt] = board.pieces[pos];
+                board.pieces[pos] = nullptr;
+                oldAllowedMoves = board.pieces[newPosInt]->allowedMoves;
+                board.pieces[newPosInt]->updateAllowedMoves(board.pieces);
                 for (auto threat : king->getThreats()){
                     if (threat->getPosition() != newPosInt){  // threatening piece has not been taken
                         threatOldAllowedMoves = threat->allowedMoves;
-                        threat->updateAllowedMoves(positions);
+                        threat->updateAllowedMoves(board.pieces);
                         if (std::count(threat->allowedMoves.begin(), threat->allowedMoves.end(), king->getPosition())){
                             threat->allowedMoves = threatOldAllowedMoves;
-                            positions[newPosInt]->setPosition(oldPos);
-                            positions[newPosInt]->allowedMoves = oldAllowedMoves;
-                            positions = snapshot;
+                            board.pieces[newPosInt]->setPosition(oldPos);
+                            board.pieces[newPosInt]->allowedMoves = oldAllowedMoves;
+                            board.pieces = snapshot;
                             return true; // still in check
                         }
                         threat->allowedMoves = threatOldAllowedMoves;
                     }
                     else{ // threatening piece was taken, check if king is still in check by another piece
-                        updateAllPossibleMoves(positions, blackPossibleMoves, whitePossibleMoves);
-                        std::unordered_map<int, std::vector<std::string>> &opponentMoves = (turn == 1 ? 
-                                                                                            blackPossibleMoves : 
-                                                                                            whitePossibleMoves);
+                        updateAllPossibleMoves(board, blackPossibleMoves, whitePossibleMoves);
                         if (opponentMoves.find(king->getPosition()) != opponentMoves.end()){
-                            positions[newPosInt]->setPosition(oldPos);
-                            positions[newPosInt]->allowedMoves = oldAllowedMoves;
-                            positions = snapshot;
-                            updateAllPossibleMoves(positions, blackPossibleMoves, whitePossibleMoves);
+                            board.pieces[newPosInt]->setPosition(oldPos);
+                            board.pieces[newPosInt]->allowedMoves = oldAllowedMoves;
+                            board.pieces = snapshot;
+                            updateAllPossibleMoves(board, blackPossibleMoves, whitePossibleMoves);
                             return true; // still in check by another piece
                         }
                     }
                 }
-                positions[newPosInt]->setPosition(oldPos);
-                positions[newPosInt]->allowedMoves = oldAllowedMoves;
-                positions = snapshot;
-                updateAllPossibleMoves(positions, blackPossibleMoves, whitePossibleMoves);
+                board.pieces[newPosInt]->setPosition(oldPos);
+                board.pieces[newPosInt]->allowedMoves = oldAllowedMoves;
+                board.pieces = snapshot;
+                updateAllPossibleMoves(board, blackPossibleMoves, whitePossibleMoves);
             }
         }
     }
     return false;
 }
 
-void forceKingOutOfCheck(std::vector<Piece *> &positions, 
-              std::unordered_map<std::string, std::vector<int>> &pieces, 
+void forceKingOutOfCheck(Board &board,
+              std::unordered_map<std::string, std::vector<int>> &piecesLocation, 
               std::unordered_map<std::string, int> &positionMap, int turn, King *king,
               std::unordered_map<int, std::vector<std::string>> &blackPossibleMoves,
               std::unordered_map<int, std::vector<std::string>> &whitePossibleMoves){
@@ -219,7 +228,7 @@ void forceKingOutOfCheck(std::vector<Piece *> &positions,
     std::unordered_map<int, std::vector<std::string>> legalMoves = turn == 1 ? whitePossibleMoves : blackPossibleMoves;
     for (const auto &p : legalMoves){
         for (const auto &value : p.second){
-            bool stillInCheck = simulateMove(value, positions, pieces, positionMap, turn, king, 
+            bool stillInCheck = simulateMove(value, board, piecesLocation, positionMap, turn, king, 
                                              blackPossibleMoves, whitePossibleMoves);
             if (stillInCheck){
                 auto newEnd = std::remove(myPossibleMoves[p.first].begin(), myPossibleMoves[p.first].end(), value);
@@ -238,8 +247,8 @@ void forceKingOutOfCheck(std::vector<Piece *> &positions,
     }
 }
 
-bool playMove(std::string move, std::vector<Piece *> &positions, 
-              std::unordered_map<std::string, std::vector<int>> &pieces, 
+bool playMove(std::string move, Board &board,
+              std::unordered_map<std::string, std::vector<int>> &piecesLocation, 
               std::unordered_map<std::string, int> &positionMap, int turn, King *king,
               std::unordered_map<int, std::vector<std::string>> &blackPossibleMoves,
               std::unordered_map<int, std::vector<std::string>> &whitePossibleMoves){
@@ -251,28 +260,28 @@ bool playMove(std::string move, std::vector<Piece *> &positions,
         std::string newPos = move[1] == 'x' ? move.substr(2, 2) : move.substr(1, 2);
         char oldPos[2];
         int newPosInt = algebraicToPosition(newPos, positionMap);
-        for (auto pos : pieces[moveCode]){
-            if (std::count(positions[pos]->allowedMoves.begin(), positions[pos]->allowedMoves.end(), newPosInt)){
-                if (positions[newPosInt] && dynamic_cast<King *>(positions[newPosInt])){
+        for (auto pos : piecesLocation[moveCode]){
+            if (std::count(board.pieces[pos]->allowedMoves.begin(), board.pieces[pos]->allowedMoves.end(), newPosInt)){
+                if (board.pieces[newPosInt] && dynamic_cast<King *>(board.pieces[newPosInt])){
                     std::cout << "It is illegal to take the King!\n";
                     return false;
                 }
-                std::string pieceName = positions[pos]->name;
-                positionToAlgebraic(positions[pos]->getPosition(), oldPos);
-                positions[pos]->setPosition(newPosInt);
-                pieces[moveCode].erase(std::remove(pieces[moveCode].begin(), 
-                                       pieces[moveCode].end(), pos), pieces[moveCode].end());
-                pieces[moveCode].push_back(newPosInt);
-                if (positions[newPosInt]){
-                    Piece *takenPiece = positions[newPosInt];
+                std::string pieceName = board.pieces[pos]->name;
+                positionToAlgebraic(board.pieces[pos]->getPosition(), oldPos);
+                board.pieces[pos]->setPosition(newPosInt);
+                piecesLocation[moveCode].erase(std::remove(piecesLocation[moveCode].begin(), 
+                                       piecesLocation[moveCode].end(), pos), piecesLocation[moveCode].end());
+                piecesLocation[moveCode].push_back(newPosInt);
+                if (board.pieces[newPosInt]){
+                    Piece *takenPiece = board.pieces[newPosInt];
                     std::cout << pieceName << " captured " << takenPiece->name << "! ";
                     delete takenPiece;
                 }
-                positions[newPosInt] = positions[pos];
-                positions[pos] = nullptr;
+                board.pieces[newPosInt] = board.pieces[pos];
+                board.pieces[pos] = nullptr;
                 std::cout << pieceName << " moved from " << oldPos << " to " << newPos << "!";
-                piecesLocation(pieces, positions);
-                updateAllPossibleMoves(positions, blackPossibleMoves, whitePossibleMoves);
+                getPiecesLocation(board, piecesLocation);
+                updateAllPossibleMoves(board, blackPossibleMoves, whitePossibleMoves);
                 return true;
             }
         }
@@ -283,32 +292,32 @@ bool playMove(std::string move, std::vector<Piece *> &positions,
         std::string newPos = move[1] == 'x' ? move.substr(2, 2) : move.substr(0, 2);
         int newPosInt = algebraicToPosition(newPos, positionMap);
         std::string moveCode = std::to_string(turn) + 'P';
-        for (auto pos : pieces[moveCode]){
-            if (std::count(positions[pos]->allowedMoves.begin(), positions[pos]->allowedMoves.end(), newPosInt)){
-                if (positions[newPosInt] && dynamic_cast<King *>(positions[newPosInt])){
+        for (auto pos : piecesLocation[moveCode]){
+            if (std::count(board.pieces[pos]->allowedMoves.begin(), board.pieces[pos]->allowedMoves.end(), newPosInt)){
+                if (board.pieces[newPosInt] && dynamic_cast<King *>(board.pieces[newPosInt])){
                     std::cout << "It is illegal to take the King!\n";
                     return false;
                 }
                 char thisFile = files[pos % 8];
                 if(thisFile == originalFile){
-                    positionToAlgebraic(positions[pos]->getPosition(), oldPos);
-                    positions[pos]->setPosition(newPosInt);
-                    if (!positions[pos]->getHasMoved()){
-                        positions[pos]->setHasMoved(true);
+                    positionToAlgebraic(board.pieces[pos]->getPosition(), oldPos);
+                    board.pieces[pos]->setPosition(newPosInt);
+                    if (!board.pieces[pos]->getHasMoved()){
+                        board.pieces[pos]->setHasMoved(true);
                     }
-                    pieces[moveCode].erase(std::remove(pieces[moveCode].begin(), 
-                                           pieces[moveCode].end(), pos), pieces[moveCode].end());
-                    pieces[moveCode].push_back(newPosInt);
-                    if (positions[newPosInt]){
-                        Piece *takenPiece = positions[newPosInt];
+                    piecesLocation[moveCode].erase(std::remove(piecesLocation[moveCode].begin(), 
+                                           piecesLocation[moveCode].end(), pos), piecesLocation[moveCode].end());
+                    piecesLocation[moveCode].push_back(newPosInt);
+                    if (board.pieces[newPosInt]){
+                        Piece *takenPiece = board.pieces[newPosInt];
                         std::cout << "Pawn captured " << takenPiece->name << "! ";
                         delete takenPiece;
                     }
-                    positions[newPosInt] = positions[pos];
-                    positions[pos] = nullptr;
+                    board.pieces[newPosInt] = board.pieces[pos];
+                    board.pieces[pos] = nullptr;
                     std::cout << "Pawn moved from " << oldPos << " to " << newPos << "!";
-                    piecesLocation(pieces, positions);
-                    updateAllPossibleMoves(positions, blackPossibleMoves, whitePossibleMoves);
+                    getPiecesLocation(board, piecesLocation);
+                    updateAllPossibleMoves(board, blackPossibleMoves, whitePossibleMoves);
                     return true;
                 }
             }
@@ -318,9 +327,9 @@ bool playMove(std::string move, std::vector<Piece *> &positions,
     return false;
 }
 
-void findKingThreats(King *king, std::vector<Piece *> &positions){
+void findKingThreats(King *king, Board &board){
     king->clearThreats();
-    for (auto piece : positions){
+    for (auto piece : board.pieces){
         if (piece){
             if (piece->getPlayer() == king->getPlayer() || dynamic_cast<King *>(piece)){
                 continue;
@@ -335,55 +344,55 @@ void findKingThreats(King *king, std::vector<Piece *> &positions){
 }
 
 
-void mateInOneB(std::vector<Piece *> &positions, 
-              std::unordered_map<std::string, std::vector<int>> &pieces, 
+void mateInOneB(Board &board,
+              std::unordered_map<std::string, std::vector<int>> &piecesLocation, 
               std::unordered_map<std::string, int> &positionMap, King *blackKing, King *whiteKing,
               std::unordered_map<int, std::vector<std::string>> &blackPossibleMoves,
               std::unordered_map<int, std::vector<std::string>> &whitePossibleMoves){
-    playMove("d4", positions, pieces, positionMap, 1, whiteKing, blackPossibleMoves, whitePossibleMoves);
+    playMove("d4", board, piecesLocation, positionMap, 1, whiteKing, blackPossibleMoves, whitePossibleMoves);
     std::cout << "\n";
-    playMove("e5", positions, pieces, positionMap, 2, blackKing, blackPossibleMoves, whitePossibleMoves);
+    playMove("e5", board, piecesLocation, positionMap, 2, blackKing, blackPossibleMoves, whitePossibleMoves);
     std::cout << "\n";
-    playMove("g4", positions, pieces, positionMap, 1, whiteKing, blackPossibleMoves, whitePossibleMoves);
+    playMove("g4", board, piecesLocation, positionMap, 1, whiteKing, blackPossibleMoves, whitePossibleMoves);
     std::cout << "\n";
-    playMove("Qf6", positions, pieces, positionMap, 2, blackKing, blackPossibleMoves, whitePossibleMoves);
+    playMove("Qf6", board, piecesLocation, positionMap, 2, blackKing, blackPossibleMoves, whitePossibleMoves);
     std::cout << "\n";
-    playMove("Wg3", positions, pieces, positionMap, 1, whiteKing, blackPossibleMoves, whitePossibleMoves);
+    playMove("Wg3", board, piecesLocation, positionMap, 1, whiteKing, blackPossibleMoves, whitePossibleMoves);
     std::cout << "\n";
-    playMove("e4", positions, pieces, positionMap, 2, blackKing, blackPossibleMoves, whitePossibleMoves);
+    playMove("e4", board, piecesLocation, positionMap, 2, blackKing, blackPossibleMoves, whitePossibleMoves);
     std::cout << "\n";
-    playMove("d5", positions, pieces, positionMap, 1, whiteKing, blackPossibleMoves, whitePossibleMoves);
+    playMove("d5", board, piecesLocation, positionMap, 1, whiteKing, blackPossibleMoves, whitePossibleMoves);
     std::cout << "\n";
-    playMove("e3", positions, pieces, positionMap, 2, blackKing, blackPossibleMoves, whitePossibleMoves);
+    playMove("e3", board, piecesLocation, positionMap, 2, blackKing, blackPossibleMoves, whitePossibleMoves);
     std::cout << "\n";
-    playMove("d6", positions, pieces, positionMap, 1, whiteKing, blackPossibleMoves, whitePossibleMoves);
+    playMove("d6", board, piecesLocation, positionMap, 1, whiteKing, blackPossibleMoves, whitePossibleMoves);
 }
 
-void mateInOneW(std::vector<Piece *> &positions, 
-              std::unordered_map<std::string, std::vector<int>> &pieces, 
+void mateInOneW(Board &board, 
+              std::unordered_map<std::string, std::vector<int>> &piecesLocation, 
               std::unordered_map<std::string, int> &positionMap, King *blackKing, King *whiteKing,
               std::unordered_map<int, std::vector<std::string>> &blackPossibleMoves,
               std::unordered_map<int, std::vector<std::string>> &whitePossibleMoves){
-    playMove("e4", positions, pieces, positionMap, 1, whiteKing, blackPossibleMoves, whitePossibleMoves);
+    playMove("e4", board, piecesLocation, positionMap, 1, whiteKing, blackPossibleMoves, whitePossibleMoves);
     std::cout << "\n";
-    playMove("Gh5", positions, pieces, positionMap, 2, blackKing, blackPossibleMoves, whitePossibleMoves);
+    playMove("Gh5", board, piecesLocation, positionMap, 2, blackKing, blackPossibleMoves, whitePossibleMoves);
     std::cout << "\n";
-    playMove("Qf3", positions, pieces, positionMap, 1, whiteKing, blackPossibleMoves, whitePossibleMoves);
+    playMove("Qf3", board, piecesLocation, positionMap, 1, whiteKing, blackPossibleMoves, whitePossibleMoves);
     std::cout << "\n";
-    playMove("Wh7", positions, pieces, positionMap, 2, blackKing, blackPossibleMoves, whitePossibleMoves);
+    playMove("Wh7", board, piecesLocation, positionMap, 2, blackKing, blackPossibleMoves, whitePossibleMoves);
     std::cout << "\n";
-    playMove("e5", positions, pieces, positionMap, 1, whiteKing, blackPossibleMoves, whitePossibleMoves);
+    playMove("e5", board, piecesLocation, positionMap, 1, whiteKing, blackPossibleMoves, whitePossibleMoves);
     std::cout << "\n";
-    playMove("a5", positions, pieces, positionMap, 2, blackKing, blackPossibleMoves, whitePossibleMoves);
+    playMove("a5", board, piecesLocation, positionMap, 2, blackKing, blackPossibleMoves, whitePossibleMoves);
     std::cout << "\n";
-    playMove("e6", positions, pieces, positionMap, 1, whiteKing, blackPossibleMoves, whitePossibleMoves);
+    playMove("e6", board, piecesLocation, positionMap, 1, whiteKing, blackPossibleMoves, whitePossibleMoves);
     std::cout << "\n";
-    playMove("g5", positions, pieces, positionMap, 2, blackKing, blackPossibleMoves, whitePossibleMoves);
+    playMove("g5", board, piecesLocation, positionMap, 2, blackKing, blackPossibleMoves, whitePossibleMoves);
 }
 
-bool isKingMated(std::vector<Piece *> &positions, std::unordered_map<int, std::vector<std::string>> &whitePossibleMoves, 
+bool isKingMated(Board &board, std::unordered_map<int, std::vector<std::string>> &whitePossibleMoves, 
               std::unordered_map<int, std::vector<std::string>> &blackPossibleMoves,
-              std::unordered_map<std::string, std::vector<int>> &pieces,
+              std::unordered_map<std::string, std::vector<int>> &piecesLocation,
               std::unordered_map<std::string, int> &positionMap,
               King *king, int player){
     std::unordered_map<int, std::vector<std::string>> &myMoves = player == 1 ? whitePossibleMoves : blackPossibleMoves;
@@ -391,7 +400,7 @@ bool isKingMated(std::vector<Piece *> &positions, std::unordered_map<int, std::v
         king->setIsCheckmated(true);
         king->setId("#");
         std::cout << " ### CHECKMATE ### ";
-        printBoard(positions);
+        board.printBoard();
         return true;
     }
     std::cout << " +++ CHECK +++ ";
@@ -399,8 +408,8 @@ bool isKingMated(std::vector<Piece *> &positions, std::unordered_map<int, std::v
 }
 
 
-bool botPlay(std::vector<Piece *> &positions, 
-             std::unordered_map<std::string, std::vector<int>> &pieces, 
+bool botPlay(Board &board,
+             std::unordered_map<std::string, std::vector<int>> &piecesLocation, 
              std::unordered_map<std::string, int> &positionMap, King *blackKing, King *whiteKing,
              std::unordered_map<int, std::vector<std::string>> &blackPossibleMoves,
              std::unordered_map<int, std::vector<std::string>> &whitePossibleMoves){
@@ -409,12 +418,12 @@ bool botPlay(std::vector<Piece *> &positions,
         std::vector<std::string> &botMoves = it->second;
         std::string botMove = botMoves[rand() % botMoves.size()];
         std::cout << "Bot move -> ";
-        if (playMove(botMove, positions, pieces, positionMap, 2, blackKing, blackPossibleMoves, whitePossibleMoves)){
+        if (playMove(botMove, board, piecesLocation, positionMap, 2, blackKing, blackPossibleMoves, whitePossibleMoves)){
             if (whiteKing->getIsInCheck(blackPossibleMoves)){
-                findKingThreats(whiteKing, positions);
-                forceKingOutOfCheck(positions, pieces, positionMap, 1, 
+                findKingThreats(whiteKing, board);
+                forceKingOutOfCheck(board, piecesLocation, positionMap, 1, 
                                     whiteKing, blackPossibleMoves, whitePossibleMoves);     
-                if (isKingMated(positions, whitePossibleMoves, blackPossibleMoves, pieces, positionMap, whiteKing, 1)){
+                if (isKingMated(board, whitePossibleMoves, blackPossibleMoves, piecesLocation, positionMap, whiteKing, 1)){
                     return true;
                 }
             }
@@ -423,34 +432,32 @@ bool botPlay(std::vector<Piece *> &positions,
     return false;
 }
 
-void play(std::vector<Piece *> &positions, bool vsBot){
+void play(Board &board, bool vsBot){
     srand(time(NULL));
     std::string move, validated;
-    std::unordered_map<std::string, std::vector<int>> pieces;
+    std::unordered_map<std::string, std::vector<int>> piecesLocation;
     std::unordered_map<std::string, int> positionMap;
     std::unordered_map<int, std::vector<std::string>> whitePossibleMoves, blackPossibleMoves;
-    createDefaultPieces(1, positions);
-    createDefaultPieces(2, positions); 
-    King *blackKing = dynamic_cast<King *>(positions[60]);
-    King *whiteKing = dynamic_cast<King *>(positions[4]);
-    updateAllPossibleMoves(positions, blackPossibleMoves, whitePossibleMoves);
-    piecesLocation(pieces, positions);
+    King *blackKing = dynamic_cast<King *>(board.pieces[60]);
+    King *whiteKing = dynamic_cast<King *>(board.pieces[4]);
+    updateAllPossibleMoves(board, blackPossibleMoves, whitePossibleMoves);
+    getPiecesLocation(board, piecesLocation);
     algebraicMap(positionMap);
     bool checkmate = false;
     int currentTurn = 1;
     while(!checkmate){
-        printBoard(positions);
+        board.printBoard();
         std::cout << "Enter a move - " << (currentTurn == 1 ? "White" : "Black") << " to play: ";    
         std::cin >> move;
         validated = validateMove(move, positionMap, currentTurn, (currentTurn == 1 ? whitePossibleMoves : blackPossibleMoves));
         if (!validated.empty()){
             if (currentTurn == 1){
-                if (playMove(validated, positions, pieces, positionMap, 1, whiteKing, blackPossibleMoves, whitePossibleMoves)){
+                if (playMove(validated, board, piecesLocation, positionMap, 1, whiteKing, blackPossibleMoves, whitePossibleMoves)){
                     if (blackKing->getIsInCheck(whitePossibleMoves)){
-                        findKingThreats(blackKing, positions);
-                        forceKingOutOfCheck(positions, pieces, positionMap, 2, 
+                        findKingThreats(blackKing, board);
+                        forceKingOutOfCheck(board, piecesLocation, positionMap, 2, 
                                             blackKing, blackPossibleMoves, whitePossibleMoves);
-                        if (isKingMated(positions, whitePossibleMoves, blackPossibleMoves, pieces, positionMap, blackKing, 2)){
+                        if (isKingMated(board, whitePossibleMoves, blackPossibleMoves, piecesLocation, positionMap, blackKing, 2)){
                             checkmate = true;
                             break;
                         }
@@ -459,21 +466,21 @@ void play(std::vector<Piece *> &positions, bool vsBot){
                     currentTurn = 2;
                 }
                 if (vsBot){
-                    printBoard(positions);
-                    if (botPlay(positions, pieces, positionMap, blackKing, whiteKing, blackPossibleMoves, whitePossibleMoves)){
+                    board.printBoard();
+                    if (botPlay(board, piecesLocation, positionMap, blackKing, whiteKing, blackPossibleMoves, whitePossibleMoves)){
                         checkmate = true;
                         break;
                     }
                     currentTurn = 1;
                 }
             }
-            else if (playMove(validated, positions, pieces, positionMap, 2, blackKing, blackPossibleMoves, whitePossibleMoves)){
+            else if (playMove(validated, board, piecesLocation, positionMap, 2, blackKing, blackPossibleMoves, whitePossibleMoves)){
                 if (whiteKing->getIsInCheck(blackPossibleMoves)){
-                    findKingThreats(whiteKing, positions);
-                    forceKingOutOfCheck(positions, pieces, positionMap, 1, 
+                    findKingThreats(whiteKing, board);
+                    forceKingOutOfCheck(board, piecesLocation, positionMap, 1, 
                                         whiteKing, blackPossibleMoves, whitePossibleMoves);     
                         
-                    if (isKingMated(positions, whitePossibleMoves, blackPossibleMoves, pieces, positionMap, whiteKing, 1)){
+                    if (isKingMated(board, whitePossibleMoves, blackPossibleMoves, piecesLocation, positionMap, whiteKing, 1)){
                         checkmate = true;
                         break;
                     }
@@ -493,10 +500,10 @@ void play(std::vector<Piece *> &positions, bool vsBot){
                 }
                 std::cout << "\n";
             }
-            else if (pos >= 0 && positions[pos]){
-                if (!positions[pos]->allowedMoves.empty()){
-                    std::cout << "Allowed squares for this " << positions[pos]->name << " to move: ";
-                    for (auto a : positions[pos]->allowedMoves){
+            else if (pos >= 0 && board.pieces[pos]){
+                if (!board.pieces[pos]->allowedMoves.empty()){
+                    std::cout << "Allowed squares for this " << board.pieces[pos]->name << " to move: ";
+                    for (auto a : board.pieces[pos]->allowedMoves){
                         char alg[2];
                         positionToAlgebraic(a, alg);
                         std::cout << alg << " ";
@@ -504,7 +511,7 @@ void play(std::vector<Piece *> &positions, bool vsBot){
                     std::cout << "\n";
                 }
                 else{
-                    std::cout << "No moves allowed for this " << positions[pos]->name << "!\n";
+                    std::cout << "No moves allowed for this " << board.pieces[pos]->name << "!\n";
                 }
             }
             else{
@@ -515,12 +522,12 @@ void play(std::vector<Piece *> &positions, bool vsBot){
             }
         }
         else if (move == "M1B" && !vsBot){  // go to a mate in 1 position, black to play and win
-            mateInOneB(positions, pieces, positionMap, blackKing, whiteKing, blackPossibleMoves, whitePossibleMoves);
+            mateInOneB(board, piecesLocation, positionMap, blackKing, whiteKing, blackPossibleMoves, whitePossibleMoves);
             std::cout << "\nM1 position loaded\n";
             currentTurn = 2;
         }
         else if (move == "M1W" && !vsBot){  // go to a mate in 1 position, white to play and win
-            mateInOneW(positions, pieces, positionMap, blackKing, whiteKing, blackPossibleMoves, whitePossibleMoves);
+            mateInOneW(board, piecesLocation, positionMap, blackKing, whiteKing, blackPossibleMoves, whitePossibleMoves);
             std::cout << "\nM1 position loaded\n";
             currentTurn = 1;
         }

@@ -3,9 +3,9 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include "pieces.hpp"
+#include "piece.hpp"
 
 
-void createDefaultPieces(int player, std::vector<Piece *> &positions);
+void createDefaultPieces(int player, std::vector<Piece *> &pieces);
 
 #endif

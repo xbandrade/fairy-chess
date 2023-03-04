@@ -3,8 +3,18 @@
 #include <iostream>
 #include <vector>
 #include <stdlib.h>
-#include "pieces.hpp"
+#include "piece.hpp"
 
-void printBoard(std::vector<Piece *> &positions);
+class Board{
+    private:
+        void createDefaultPieces(int player);
+    public: 
+        Board();
+        std::vector<Piece *> pieces;
+        void printBoard();
+        ~Board();
+};
+
+
 
 #endif

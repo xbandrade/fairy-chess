@@ -1,7 +1,7 @@
 CC = g++
 CFLAGS = -Wall
 INCLUDES = -Iheaders
-SOURCES = src/board.cpp src/main.cpp src/players.cpp src/pieces.cpp src/game.cpp
+SOURCES = src/board.cpp src/main.cpp src/player.cpp src/piece.cpp src/game.cpp
 OBJ = $(SOURCES:.cpp=.o)
 EXECUTABLE = fairy-chess
 
