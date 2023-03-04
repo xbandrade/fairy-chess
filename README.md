@@ -7,6 +7,12 @@
 ```make``` to run the Makefile and create the executable `fairy-chess` <br/> 
 ```./run.sh``` to recompile the application and run `fairy-chess` <br/> 
 
+## ❕Main Menu Options
+- `Player vs Player` will start a match between two players
+- `Player vs Bot` will start a match against the bot. The bot currently uses one of its legal moves randomly
+- `Help` will display information about the fairy pieces, the rules of the game and how to play it <br/>
+ &nbsp; <img src="https://raw.githubusercontent.com/xbandrade/fairy-chess/master/img/menu.png" width=30% height=30%>
+
 
 ## ❕This implementation of Fairy Chess currently has three Fairy Pieces:
 - `The Wazir` has the same movement pattern as the Rook, but can only move a single square, making it very weak.
