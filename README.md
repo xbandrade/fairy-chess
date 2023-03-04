@@ -36,8 +36,8 @@
 - `m` + `[algebraic position]` will display all legal moves for the piece on that position, e.g. the Wazir is on square **b6**, 
   then `mb6` shows all available moves for that Wazir.
 - `m*` will display all legal moves for the current player
-- `M1B` will take you to a mate in 1 position for the black pieces
-- `M1W` will take you to a mate in 1 position for the white pieces
+- `M1B` will take you to a mate in 1 position for the black pieces, can only use it on the first move
+- `M1W` will take you to a mate in 1 position for the white pieces, can only use it on the first move
 
 More information about Fairy Chess pieces and rules can be found on [chess.com](https://www.chess.com/clubs/forum/view/the-fairy-pieces-introduction)
 and [Wikipedia](https://en.wikipedia.org/wiki/Fairy_chess_piece).  
