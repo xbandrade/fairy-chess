@@ -1,18 +1,15 @@
 {
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "C++ Launch (GDB)",
-            "type": "cppdbg",
+            "type": "bashdb",
             "request": "launch",
-            "program": "${workspaceFolder}/fairy-chess",
-            "args": [],
-            "<EUGPSCoordinates>stopAtEntry</EUGPSCoordinates>":"false",
-            "cwd": "${workspaceFolder}",
-            "<EUGPSCoordinates>environment</EUGPSCoordinates>":[],
-            "<EUGPSCoordinates>externalConsole</EUGPSCoordinates>":"false",
-            "<EUGPSCoordinates>MIMode</EUGPSCoordinates>":"gdb",
-            "<EUGPSCoordinates>MIDebuggerPath</EUGPSCoordinates>":"/usr/bin/gdb"
+            "cwd": "${workspaceRoot}",
+            "name": "Bash-Debug (simplest configuration)",
+            "program": "${workspaceRoot}/run.sh"
         }
     ]
 }

@@ -1,6 +1,10 @@
 #!/bin/bash
 
-make clean
+if [ ! -d "build" ]; then
+    mkdir build
+fi
+cd build
+cmake ..
 make
-clear
 ./fairy-chess
+cd ..

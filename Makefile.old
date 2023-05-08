@@ -13,5 +13,7 @@ $(EXECUTABLE): $(OBJ)
 %.o: %.cpp
 	$(CC) $(CFLAGS) $(INCLUDES) -c -o $@ $<
 
+.PHONY: clean
+
 clean:
 	rm -f $(OBJ) $(EXECUTABLE)

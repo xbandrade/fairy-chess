@@ -2,7 +2,15 @@
 #define GAME_HPP
 #include <iostream>
 #include <vector>
+#include <random>
 #include <unordered_map>
+#include <algorithm>
+#include <unordered_set>
+#include <map>
+#include <utility>
+#include <queue>
+#include <cstdlib>
+#include <ctime>
 #include "player.hpp"
 #include "board.hpp"
 
@@ -13,6 +21,8 @@ void positionToAlgebraic(int pos, char alg[2]);
 std::string validateMove(std::string move, Player &currentPlayer);
 
 void updateAllPossibleMoves(Board &board, Player &black, Player &white);
+
+void updatePlayerScores(Board &board, Player &black, Player &white);
 
 bool simulateMove(std::string move, Board &board, int turn, King *king, Player &black, Player &white);
 

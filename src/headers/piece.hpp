@@ -8,7 +8,10 @@ class Piece{
     private:
         int player;
         int position;
+        int piece_value;
         std::string id;
+    protected:
+        void setVal(int val);
     public:
         std::string name;
         std::vector<int> allowedMoves;
@@ -20,6 +23,7 @@ class Piece{
         virtual void setHasMoved(bool moved);
         std::string getId();
         void setId(std::string new_id);
+        int getVal();
         int getPlayer();
         virtual ~Piece(){}
 };

@@ -52,12 +52,15 @@ int main(void){
                       << "\tQe5 moves the Queen to e5\n"
                       << "\tGxd4 moves the Grasshopper to d4, capturing a piece\n"
                       << "\th3 moves the Pawn to h3\n"
-                      << "➜Entering 'm' followed by a position will show all possible moves for the piece on \n"
+                      << "➜ Entering 'm' followed by a position will show all possible moves for the piece on \n"
                       << "\tthat position: if the Wazir is on b6, 'mb6' will show all available moves \n"
                       << "\tfor that Wazir.\n"
-                      << "➜Entering 'm*' will show all possible moves for the current player.\n"
-                      << "➜Entering 'M1B' will take you to a mate in 1 position for the black pieces.\n\n"
-                      << "➜Entering 'M1W' will take you to a mate in 1 position for the white pieces.\n\n";
+                      << "➜ Entering 'm*' will show all possible moves for the current player.\n"
+                      << "➜ Entering 'M1B' will take you to a mate in 1 position for the black pieces.\n"
+                      << "➜ Entering 'M1W' will take you to a mate in 1 position for the white pieces.\n"
+                      << "❗When playing against the bot, it will play a valid move with high priority \n"
+                      << "in the moves list. The move priority is decided by the sum of materials points \n"
+                      << "after a move is played. The bot will always go for a checkmate if it sees a mate in one.\n";
             break;
         }
         case 4:{

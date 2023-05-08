@@ -1,20 +1,20 @@
 #include "headers/game.hpp"
 #include "headers/board.hpp"
-#include <algorithm>
-#include <unordered_set>
-#include <cstdlib>
-#include <ctime>
 
 
 int algebraicToPosition(std::string move, Board &board){
     if (board.positionMap.count(move) > 0){
         return board.positionMap[move];
     }
-    if (board.positionMap.count(move.substr(1, 2)) > 0){
+    if (move.length() > 1 && board.positionMap.count(move.substr(1, 2)) > 0){
         return board.positionMap[move.substr(1, 2)];
+    }
+    if (move.length() > 2 && board.positionMap.count(move.substr(2, 3)) > 0){
+        return board.positionMap[move.substr(2, 3)];
     }
     return -1;
 }
+
 
 void positionToAlgebraic(int pos, char alg[2]){
     std::string files = "abcdefgh";
@@ -24,6 +24,7 @@ void positionToAlgebraic(int pos, char alg[2]){
     alg[0] = files[y];
     alg[1] = ranks[x];
 }
+
 
 std::string validateMove(std::string move, Player &currentPlayer){
     std::unordered_set<std::string> values;
@@ -80,6 +81,7 @@ std::string validateMove(std::string move, Player &currentPlayer){
     return "";
 }
 
+
 void updateAllPossibleMoves(Board &board, Player &black, Player &white){
     black.possibleMoves.clear();
     white.possibleMoves.clear();
@@ -120,6 +122,18 @@ void updateAllPossibleMoves(Board &board, Player &black, Player &white){
     }
     blackKing->updateAllowedMoves(board.pieces, black.possibleMoves, white.possibleMoves);
     whiteKing->updateAllowedMoves(board.pieces, white.possibleMoves, black.possibleMoves);
+}
+
+
+void updatePlayerScores(Board &board, Player &black, Player &white){
+    int score1 = 0, score2 = 0;
+    for (auto piece : board.pieces){
+        if (piece){
+            (piece->getPlayer() == 1 ? score1 : score2) += piece->getVal();
+        }
+    }
+    white.setScore(score1);
+    black.setScore(score2);
 }
 
 
@@ -192,28 +206,21 @@ bool simulateMove(std::string move, Board &board, int turn, King *king, Player &
     return false;
 }
 
+
 void forceKingOutOfCheck(Board &board, int turn, King *king, Player &black, Player &white){
-    std::unordered_map<int, std::vector<std::string>> &myPossibleMoves = turn == 1 ? white.possibleMoves : black.possibleMoves;
-    std::unordered_map<int, std::vector<std::string>> legalMoves = turn == 1 ? white.possibleMoves : black.possibleMoves;
-    for (const auto &p : legalMoves){
+    std::unordered_map<int, std::vector<std::string>> myPossibleMoves = turn == 1 ? white.possibleMoves : black.possibleMoves;
+    std::unordered_map<int, std::vector<std::string>> allowedMoves;
+    for (const auto &p : myPossibleMoves){
         for (const auto &value : p.second){
             bool stillInCheck = simulateMove(value, board, turn, king, black, white);
-            if (stillInCheck){
-                auto newEnd = std::remove(myPossibleMoves[p.first].begin(), myPossibleMoves[p.first].end(), value);
-                myPossibleMoves[p.first].erase(newEnd, myPossibleMoves[p.first].end());
+            if (!stillInCheck){
+                allowedMoves[p.first].push_back(value);
             }
         }
     }
-    
-    for (auto it = myPossibleMoves.begin(); it != myPossibleMoves.end();){
-        if (it->second.empty()){
-            it = myPossibleMoves.erase(it);
-        }
-        else{
-            it++;
-        }
-    }
+    (turn == 1 ? white.possibleMoves : black.possibleMoves) = allowedMoves;
 }
+
 
 bool playMove(std::string move, Board &board, int turn, King *king, Player &black, Player &white){
     std::string piecesCodes = "QBKNRCWG";
@@ -239,6 +246,12 @@ bool playMove(std::string move, Board &board, int turn, King *king, Player &blac
                 if (board.pieces[newPosInt]){
                     Piece *takenPiece = board.pieces[newPosInt];
                     std::cout << pieceName << " captured " << takenPiece->name << "! ";
+                    if (takenPiece->getPlayer() == 1){
+                        white.subtractScore(takenPiece->getVal());
+                    }
+                    else{
+                        black.subtractScore(takenPiece->getVal());
+                    }
                     delete takenPiece;
                 }
                 board.pieces[newPosInt] = board.pieces[pos];
@@ -275,6 +288,12 @@ bool playMove(std::string move, Board &board, int turn, King *king, Player &blac
                     if (board.pieces[newPosInt]){
                         Piece *takenPiece = board.pieces[newPosInt];
                         std::cout << "Pawn captured " << takenPiece->name << "! ";
+                        if (takenPiece->getPlayer() == 1){
+                            white.subtractScore(takenPiece->getVal());
+                        }
+                        else{
+                            black.subtractScore(takenPiece->getVal());
+                        }
                         delete takenPiece;
                     }
                     board.pieces[newPosInt] = board.pieces[pos];
@@ -290,6 +309,7 @@ bool playMove(std::string move, Board &board, int turn, King *king, Player &blac
     std::cout << "This is an invalid move!\n";
     return false;
 }
+
 
 void findKingThreats(King *king, Board &board){
     king->clearThreats();
@@ -328,6 +348,7 @@ void mateInOneB(Board &board, King *blackKing, King *whiteKing, Player &black, P
     playMove("d6", board, 1, whiteKing, black, white);
 }
 
+
 void mateInOneW(Board &board, King *blackKing, King *whiteKing, Player &black, Player &white){
     playMove("e4", board, 1, whiteKing, black, white);
     std::cout << "\n";
@@ -346,6 +367,7 @@ void mateInOneW(Board &board, King *blackKing, King *whiteKing, Player &black, P
     playMove("g5", board, 2, blackKing, black, white);
 }
 
+
 bool isKingMated(Board &board, Player &black, Player &white, King *king, int player){
     std::unordered_map<int, std::vector<std::string>> &myMoves = player == 1 ? white.possibleMoves : black.possibleMoves;
     if (myMoves.empty()){   
@@ -361,23 +383,40 @@ bool isKingMated(Board &board, Player &black, Player &white, King *king, int pla
 
 
 bool botPlay(Board &board, King *blackKing, King *whiteKing, Player &black, Player &white){
-        auto it = black.possibleMoves.begin();
-        std::advance(it, rand() % black.possibleMoves.size());
-        std::vector<std::string> &botMoves = it->second;
-        std::string botMove = botMoves[rand() % botMoves.size()];
-        std::cout << "Bot move -> ";
-        if (playMove(botMove, board, 2, blackKing, black, white)){
-            if (whiteKing->getIsInCheck(black.possibleMoves)){
-                findKingThreats(whiteKing, board);
-                forceKingOutOfCheck(board, 1, whiteKing, black, white);     
-                if (isKingMated(board, black, white, whiteKing, 1)){
-                    return true;
-                }
-            }
-            std::cout << "\n";
+    static std::random_device rd;
+    static std::mt19937 gen(rd());
+    std::map<int, std::vector<std::string>> bestMoves;
+    std::string turn = "2";
+    std::string piecesCodes = "QBKNRCWG";
+    int currStateScore = white.getScore() - black.getScore();
+    for (auto p : black.possibleMoves){
+        int pos = p.first;
+        for (auto move : p.second){
+            int newPos = algebraicToPosition(move, board);
+            Piece *piece = board.pieces[newPos];
+            bestMoves[currStateScore - (piece ? piece->getVal() : 0)].push_back(move);
         }
+    }
+    auto it = bestMoves.begin();
+    int smallestKey = it->first;
+    std::vector<std::string> &moves = it->second;
+    std::uniform_int_distribution<> dis(0, moves.size() - 1);
+    std::string botMove = moves[dis(gen)];
+    std::cout << "Bot move -> ";
+    std::cout << botMove << " - \n";
+    if (playMove(botMove, board, 2, blackKing, black, white)){
+        if (whiteKing->getIsInCheck(black.possibleMoves)){
+            findKingThreats(whiteKing, board);
+            forceKingOutOfCheck(board, 1, whiteKing, black, white);
+            if (isKingMated(board, black, white, whiteKing, 1)){
+                return true;
+            }
+        }
+        std::cout << "\n";
+    }
     return false;
 }
+
 
 void play(Board &board, bool vsBot){
     srand(time(NULL));
@@ -387,6 +426,7 @@ void play(Board &board, bool vsBot){
     Player *currentPlayer = &white;
     King *blackKing = dynamic_cast<King *>(board.pieces[60]);
     King *whiteKing = dynamic_cast<King *>(board.pieces[4]);
+    updatePlayerScores(board, black, white);
     updateAllPossibleMoves(board, black, white);
     board.updatePiecesLocation();
     bool checkmate = false;
@@ -491,6 +531,7 @@ void play(Board &board, bool vsBot){
                 std::cout << " +++ CHECK +++ \n";
             }
         }
+        updatePlayerScores(board, black, white);
     }
     if (checkmate){
         std::cout << "\n# CHECKMATE # - ";

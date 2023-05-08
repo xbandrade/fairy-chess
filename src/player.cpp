@@ -17,3 +17,15 @@ int Player::getId(){
 std::string Player::getColor(){
     return color;
 }
+
+int Player::getScore(){
+    return player_score;
+}
+
+void Player::setScore(int score){
+    player_score = score;
+}
+
+void Player::subtractScore(int sub){
+    player_score -= sub;
+}

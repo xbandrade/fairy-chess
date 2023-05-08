@@ -1,2 +1,5 @@
 src/*.o
+src/*.i
+src/*.s
 src/output
+build/
