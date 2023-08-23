@@ -1,57 +1,57 @@
-#include "headers/piece.hpp"
+#include "piece.hpp"
 #include <iostream>
 
-int calcPos(int x, int y){
+int calcPos(int x, int y) {
     return x * 8 + y;
 }
 
-Piece::Piece(int pos, int player_id){
+Piece::Piece(int pos, int player_id) {
     position = pos;
     player = player_id;
 }
 
-int Piece::getPosition(){
+int Piece::getPosition() {
     return position;
 }
 
-void Piece::setPosition(int pos){
+void Piece::setPosition(int pos) {
     position = pos;
 }
 
-bool Piece::getHasMoved(){
+bool Piece::getHasMoved() {
     return false;
 }
 
-void Piece::setHasMoved(bool moved){
+void Piece::setHasMoved(bool moved) {
 }
 
-std::string Piece::getId(){
+std::string Piece::getId() {
     return id;
 }
 
-void Piece::setId(std::string new_id){
+void Piece::setId(std::string new_id) {
     id = new_id;
 }
 
-int Piece::getPlayer(){
+int Piece::getPlayer() {
     return player;
 }
 
-void Piece::setVal(int val){
+void Piece::setVal(int val) {
     piece_value = val;
 }
 
-int Piece::getVal(){
+int Piece::getVal() {
     return piece_value;
 }
 
-Pawn::Pawn(int pos, int player_id) : Piece(pos, player_id){
+Pawn::Pawn(int pos, int player_id) : Piece(pos, player_id) {
     name = "Pawn";
     setId("P");
     setVal(1);
 }
 
-bool Pawn::getHasMoved(){
+bool Pawn::getHasMoved() {
     return hasMoved;
 }
 
@@ -60,104 +60,104 @@ void Pawn::setHasMoved(bool moved)
     hasMoved = moved;
 }
 
-void Pawn::updateAllowedMoves(std::vector<Piece *> &pieces){
+void Pawn::updateAllowedMoves(std::vector<Piece *> &pieces) {
     // Moves 1 (or 2) forward, captures diagonally
     allowedMoves.clear();
     int x = getPosition() / 8;
     int y = getPosition() % 8;
-    if (getPlayer() == 1){
+    if (getPlayer() == 1) {
         int pos = calcPos(x + 1, y);
-        if (x < 7 && !pieces[pos]){
+        if (x < 7 && !pieces[pos]) {
             allowedMoves.push_back(pos);
         }
         pos = calcPos(x + 2, y);
-        if (!hasMoved && !allowedMoves.empty() && !pieces[calcPos(x + 1, y)] && !pieces[pos]){
+        if (!hasMoved && !allowedMoves.empty() && !pieces[calcPos(x + 1, y)] && !pieces[pos]) {
             allowedMoves.push_back(pos);
         }
         pos = calcPos(x + 1, y - 1);
-        if (x < 7 && y > 0 && pieces[pos] && (pieces[pos]->getPlayer() != getPlayer())){
+        if (x < 7 && y > 0 && pieces[pos] && (pieces[pos]->getPlayer() != getPlayer())) {
             allowedMoves.push_back(pos);
         }
         pos = calcPos(x + 1, y + 1);
-        if (x < 7 && y < 7 && pieces[pos] && (pieces[pos]->getPlayer() != getPlayer())){
+        if (x < 7 && y < 7 && pieces[pos] && (pieces[pos]->getPlayer() != getPlayer())) {
             allowedMoves.push_back(pos);
         }
     }
     else{
         int pos = calcPos(x - 1, y);
-        if (x > 0 && !pieces[pos]){
+        if (x > 0 && !pieces[pos]) {
             allowedMoves.push_back(pos);
         }
         pos = calcPos(x - 2, y);
-        if (!hasMoved && !allowedMoves.empty() && !pieces[calcPos(x - 1, y)] && !pieces[pos]){
+        if (!hasMoved && !allowedMoves.empty() && !pieces[calcPos(x - 1, y)] && !pieces[pos]) {
             allowedMoves.push_back(pos);
         }
         pos = calcPos(x - 1, y - 1);
-        if (x > 0 && y > 0 && pieces[pos] && (pieces[pos]->getPlayer() != getPlayer())){
+        if (x > 0 && y > 0 && pieces[pos] && (pieces[pos]->getPlayer() != getPlayer())) {
             allowedMoves.push_back(pos);
         }
         pos = calcPos(x - 1, y + 1);
-        if (x > 0 && y < 7 && pieces[pos] && (pieces[pos]->getPlayer() != getPlayer())){
+        if (x > 0 && y < 7 && pieces[pos] && (pieces[pos]->getPlayer() != getPlayer())) {
             allowedMoves.push_back(pos);
         }
     }
 }
 
-Knight::Knight(int pos, int player_id) : Piece(pos, player_id){
+Knight::Knight(int pos, int player_id) : Piece(pos, player_id) {
     name = "Knight";
     setId("N");
     setVal(3);
 }
 
-void Knight::updateAllowedMoves(std::vector<Piece *> &pieces){
+void Knight::updateAllowedMoves(std::vector<Piece *> &pieces) {
     // Moves in an L shape (1-2), can jump over pieces
     allowedMoves.clear();
     int x = getPosition() / 8;
     int y = getPosition() % 8;
     int pos = calcPos(x - 2, y - 1);
-    if (x > 1 && y > 0 && (!pieces[pos] || (pieces[pos]->getPlayer() != getPlayer()))){
+    if (x > 1 && y > 0 && (!pieces[pos] || (pieces[pos]->getPlayer() != getPlayer()))) {
         allowedMoves.push_back(pos);
     }
     pos = calcPos(x - 2, y + 1);
-    if (x > 1 && y < 7 && (!pieces[pos] || (pieces[pos]->getPlayer() != getPlayer()))){
+    if (x > 1 && y < 7 && (!pieces[pos] || (pieces[pos]->getPlayer() != getPlayer()))) {
         allowedMoves.push_back(pos);
     }
     pos = calcPos(x + 2, y - 1);
-    if (x < 6 && y > 0 && (!pieces[pos] || (pieces[pos]->getPlayer() != getPlayer()))){
+    if (x < 6 && y > 0 && (!pieces[pos] || (pieces[pos]->getPlayer() != getPlayer()))) {
         allowedMoves.push_back(pos);
     }
     pos = calcPos(x + 2, y + 1);
-    if (x < 6 && y < 7 && (!pieces[pos] || (pieces[pos]->getPlayer() != getPlayer()))){
+    if (x < 6 && y < 7 && (!pieces[pos] || (pieces[pos]->getPlayer() != getPlayer()))) {
         allowedMoves.push_back(pos);
     }
     pos = calcPos(x - 1, y - 2);
-    if (x > 0 && y > 1 && (!pieces[pos] || (pieces[pos]->getPlayer() != getPlayer()))){
+    if (x > 0 && y > 1 && (!pieces[pos] || (pieces[pos]->getPlayer() != getPlayer()))) {
         allowedMoves.push_back(pos);
     }
     pos = calcPos(x + 1, y - 2);
-    if (x < 7 && y > 1 && (!pieces[pos] || (pieces[pos]->getPlayer() != getPlayer()))){
+    if (x < 7 && y > 1 && (!pieces[pos] || (pieces[pos]->getPlayer() != getPlayer()))) {
         allowedMoves.push_back(pos);
     }
     pos = calcPos(x - 1, y + 2);
-    if (x > 0 && y < 6 && (!pieces[pos] || (pieces[pos]->getPlayer() != getPlayer()))){
+    if (x > 0 && y < 6 && (!pieces[pos] || (pieces[pos]->getPlayer() != getPlayer()))) {
         allowedMoves.push_back(pos);
     }
     pos = calcPos(x + 1, y + 2);
-    if (x < 7 && y < 6 && (!pieces[pos] || (pieces[pos]->getPlayer() != getPlayer()))){
+    if (x < 7 && y < 6 && (!pieces[pos] || (pieces[pos]->getPlayer() != getPlayer()))) {
         allowedMoves.push_back(pos);
     }
 }
 
-Bishop::Bishop(int pos, int player_id) : Piece(pos, player_id){
+Bishop::Bishop(int pos, int player_id) : Piece(pos, player_id) {
     name = "Bishop";
     setId("B");
     setVal(3);
 }
 
-bool pieceMovement(int i, int j, std::vector<Piece *> &pieces, Piece *piece){
+bool pieceMovement(int i, int j, std::vector<Piece *> &pieces, Piece *piece) {
     int pos = calcPos(i, j);
-    if (pieces[pos]){
-        if (pieces[pos]->getPlayer() != piece->getPlayer()){
+    if (pieces[pos]) {
+        if (pieces[pos]->getPlayer() != piece->getPlayer()) {
             piece->allowedMoves.push_back(pos);
         }
         return false;
@@ -166,207 +166,207 @@ bool pieceMovement(int i, int j, std::vector<Piece *> &pieces, Piece *piece){
     return true;
 }
 
-void Bishop::updateAllowedMoves(std::vector<Piece *> &pieces){
+void Bishop::updateAllowedMoves(std::vector<Piece *> &pieces) {
     // Moves diagonally
     allowedMoves.clear();
     int x = getPosition() / 8;
     int y = getPosition() % 8;
-    for (int i = x - 1, j = y - 1; i >= 0 && j >= 0; --i, --j){   
-        if (!pieceMovement(i, j, pieces, this)){
+    for (int i = x - 1, j = y - 1; i >= 0 && j >= 0; --i, --j) {   
+        if (!pieceMovement(i, j, pieces, this)) {
             break;
         }
     }
-    for (int i = x - 1, j = y + 1; i >= 0 && j < 8; --i, ++j){
-        if (!pieceMovement(i, j, pieces, this)){
+    for (int i = x - 1, j = y + 1; i >= 0 && j < 8; --i, ++j) {
+        if (!pieceMovement(i, j, pieces, this)) {
             break;
         }
     }
-    for (int i = x + 1, j = y - 1; i < 8 && j >= 0; ++i, --j){
-        if (!pieceMovement(i, j, pieces, this)){
+    for (int i = x + 1, j = y - 1; i < 8 && j >= 0; ++i, --j) {
+        if (!pieceMovement(i, j, pieces, this)) {
             break;
         }
     }
-    for (int i = x + 1, j = y + 1; i < 8 && j < 8; ++i, ++j){
-        if (!pieceMovement(i, j, pieces, this)){
+    for (int i = x + 1, j = y + 1; i < 8 && j < 8; ++i, ++j) {
+        if (!pieceMovement(i, j, pieces, this)) {
             break;
         }
     }
 }
 
-Rook::Rook(int pos, int player_id) : Piece(pos, player_id){
+Rook::Rook(int pos, int player_id) : Piece(pos, player_id) {
     name = "Rook";
     setId("R");
     setVal(5);
 }
 
-void Rook::updateAllowedMoves(std::vector<Piece *> &pieces){
+void Rook::updateAllowedMoves(std::vector<Piece *> &pieces) {
     // Moves horizontally/vertically
     allowedMoves.clear();
     int x = getPosition() / 8;
     int y = getPosition() % 8;
-    for (int i = x - 1; i >= 0; --i){
-        if (!pieceMovement(i, y, pieces, this)){
+    for (int i = x - 1; i >= 0; --i) {
+        if (!pieceMovement(i, y, pieces, this)) {
             break;
         }
     }
-    for (int i = x + 1; i < 8; ++i){
-        if (!pieceMovement(i, y, pieces, this)){
+    for (int i = x + 1; i < 8; ++i) {
+        if (!pieceMovement(i, y, pieces, this)) {
             break;
         }
     }
-    for (int j = y - 1; j >= 0; --j){
-        if (!pieceMovement(x, j, pieces, this)){
+    for (int j = y - 1; j >= 0; --j) {
+        if (!pieceMovement(x, j, pieces, this)) {
             break;
         }
     }
-    for (int j = y + 1; j < 8; ++j){
-        if (!pieceMovement(x, j, pieces, this)){
+    for (int j = y + 1; j < 8; ++j) {
+        if (!pieceMovement(x, j, pieces, this)) {
             break;
         }
     }
 }
 
-Queen::Queen(int pos, int player_id) : Piece(pos, player_id){
+Queen::Queen(int pos, int player_id) : Piece(pos, player_id) {
     name = "Queen";
     // id = player_id == 1 ? "♕": "♛";
     setId("Q");
     setVal(9);
 }
 
-void Queen::updateAllowedMoves(std::vector<Piece *> &pieces){
+void Queen::updateAllowedMoves(std::vector<Piece *> &pieces) {
     // Moves horizontally/vertically/diagonally
     allowedMoves.clear();
     int x = getPosition() / 8;
     int y = getPosition() % 8;
-    for (int i = x - 1; i >= 0; --i){
-        if (!pieceMovement(i, y, pieces, this)){
+    for (int i = x - 1; i >= 0; --i) {
+        if (!pieceMovement(i, y, pieces, this)) {
             break;
         }
     }
-    for (int i = x + 1; i < 8; ++i){
-        if (!pieceMovement(i, y, pieces, this)){
+    for (int i = x + 1; i < 8; ++i) {
+        if (!pieceMovement(i, y, pieces, this)) {
             break;
         }
     }
-    for (int j = y - 1; j >= 0; --j){
-        if (!pieceMovement(x, j, pieces, this)){
+    for (int j = y - 1; j >= 0; --j) {
+        if (!pieceMovement(x, j, pieces, this)) {
             break;
         }
     }
-    for (int j = y + 1; j < 8; ++j){
-        if (!pieceMovement(x, j, pieces, this)){
+    for (int j = y + 1; j < 8; ++j) {
+        if (!pieceMovement(x, j, pieces, this)) {
             break;
         }
     }
-    for (int i = x - 1, j = y - 1; i >= 0 && j >= 0; --i, --j){
-        if (!pieceMovement(i, j, pieces, this)){
+    for (int i = x - 1, j = y - 1; i >= 0 && j >= 0; --i, --j) {
+        if (!pieceMovement(i, j, pieces, this)) {
             break;
         }
     }
-    for (int i = x - 1, j = y + 1; i >= 0 && j < 8; --i, ++j){
-        if (!pieceMovement(i, j, pieces, this)){
+    for (int i = x - 1, j = y + 1; i >= 0 && j < 8; --i, ++j) {
+        if (!pieceMovement(i, j, pieces, this)) {
             break;
         }
     }
-    for (int i = x + 1, j = y - 1; i < 8 && j >= 0; ++i, --j){
-        if (!pieceMovement(i, j, pieces, this)){
+    for (int i = x + 1, j = y - 1; i < 8 && j >= 0; ++i, --j) {
+        if (!pieceMovement(i, j, pieces, this)) {
             break;
         }
     }
-    for (int i = x + 1, j = y + 1; i < 8 && j < 8; ++i, ++j){
-        if (!pieceMovement(i, j, pieces, this)){
+    for (int i = x + 1, j = y + 1; i < 8 && j < 8; ++i, ++j) {
+        if (!pieceMovement(i, j, pieces, this)) {
             break;
         }
     }
 }
 
 
-Wazir::Wazir(int pos, int player_id) : Piece(pos, player_id){
+Wazir::Wazir(int pos, int player_id) : Piece(pos, player_id) {
     name = "Wazir";
     setId("W");
     setVal(1);
 }
 
 
-void Wazir::updateAllowedMoves(std::vector<Piece *> &pieces){
+void Wazir::updateAllowedMoves(std::vector<Piece *> &pieces) {
     // Moves 1 square horizontally/vertically
     allowedMoves.clear();
     int x = getPosition() / 8;
     int y = getPosition() % 8;
     int pos = calcPos(x - 1, y);
-    if (x > 0 && (!pieces[pos] || (pieces[pos]->getPlayer() != getPlayer()))){
+    if (x > 0 && (!pieces[pos] || (pieces[pos]->getPlayer() != getPlayer()))) {
         allowedMoves.push_back(pos);
     }
     pos = calcPos(x + 1, y);
-    if (x < 7 && (!pieces[pos] || (pieces[pos]->getPlayer() != getPlayer()))){
+    if (x < 7 && (!pieces[pos] || (pieces[pos]->getPlayer() != getPlayer()))) {
         allowedMoves.push_back(pos);
     }
     pos = calcPos(x, y - 1);
-    if (y > 0 && (!pieces[pos] || (pieces[pos]->getPlayer() != getPlayer()))){
+    if (y > 0 && (!pieces[pos] || (pieces[pos]->getPlayer() != getPlayer()))) {
         allowedMoves.push_back(pos);
     }
     pos = calcPos(x, y + 1);
-    if (y < 7 && (!pieces[pos] || (pieces[pos]->getPlayer() != getPlayer()))){
+    if (y < 7 && (!pieces[pos] || (pieces[pos]->getPlayer() != getPlayer()))) {
         allowedMoves.push_back(pos);
     }
 }
 
-Camel::Camel(int pos, int player_id) : Piece(pos, player_id){
+Camel::Camel(int pos, int player_id) : Piece(pos, player_id) {
     name = "Camel";
     setId("C");
     setVal(3);
 }
 
-void Camel::updateAllowedMoves(std::vector<Piece *> &pieces){
+void Camel::updateAllowedMoves(std::vector<Piece *> &pieces) {
     // Moves in a long L shape (1-3), can jump over pieces
     allowedMoves.clear();
     int x = getPosition() / 8;
     int y = getPosition() % 8;
     int pos = calcPos(x - 3, y - 1);
-    if (x > 2 && y > 0 && (!pieces[pos] || (pieces[pos]->getPlayer() != getPlayer()))){
+    if (x > 2 && y > 0 && (!pieces[pos] || (pieces[pos]->getPlayer() != getPlayer()))) {
         allowedMoves.push_back(calcPos(x - 3, y - 1));
     }
     pos = calcPos(x - 3, y + 1);
-    if (x > 2 && y < 7 && (!pieces[pos] || (pieces[pos]->getPlayer() != getPlayer()))){
+    if (x > 2 && y < 7 && (!pieces[pos] || (pieces[pos]->getPlayer() != getPlayer()))) {
         allowedMoves.push_back(calcPos(x - 3, y + 1));
     }
     pos = calcPos(x + 3, y - 1);
-    if (x < 5 && y > 0 && (!pieces[pos] || (pieces[pos]->getPlayer() != getPlayer()))){
+    if (x < 5 && y > 0 && (!pieces[pos] || (pieces[pos]->getPlayer() != getPlayer()))) {
         allowedMoves.push_back(calcPos(x + 3, y - 1));
     }
     pos = calcPos(x + 3, y + 1);
-    if (x < 5 && y < 7 && (!pieces[pos] || (pieces[pos]->getPlayer() != getPlayer()))){
+    if (x < 5 && y < 7 && (!pieces[pos] || (pieces[pos]->getPlayer() != getPlayer()))) {
         allowedMoves.push_back(calcPos(x + 3, y + 1));
     }
     pos = calcPos(x - 1, y - 3);
-    if (x > 0 && y > 2 && (!pieces[pos] || (pieces[pos]->getPlayer() != getPlayer()))){
+    if (x > 0 && y > 2 && (!pieces[pos] || (pieces[pos]->getPlayer() != getPlayer()))) {
         allowedMoves.push_back(calcPos(x - 1, y - 3));
     }
     pos = calcPos(x + 1, y - 3);
-    if (x < 7 && y > 2 && (!pieces[pos] || (pieces[pos]->getPlayer() != getPlayer()))){
+    if (x < 7 && y > 2 && (!pieces[pos] || (pieces[pos]->getPlayer() != getPlayer()))) {
         allowedMoves.push_back(calcPos(x + 1, y - 3));
     }
     pos = calcPos(x - 1, y + 3);
-    if (x > 0 && y < 5 && (!pieces[pos] || (pieces[pos]->getPlayer() != getPlayer()))){
+    if (x > 0 && y < 5 && (!pieces[pos] || (pieces[pos]->getPlayer() != getPlayer()))) {
         allowedMoves.push_back(calcPos(x - 1, y + 3));
     }
     pos = calcPos(x + 1, y + 3);
-    if (x < 7 && y < 5 && (!pieces[pos] || (pieces[pos]->getPlayer() != getPlayer()))){
+    if (x < 7 && y < 5 && (!pieces[pos] || (pieces[pos]->getPlayer() != getPlayer()))) {
         allowedMoves.push_back(calcPos(x + 1, y + 3));
     }
 }
 
-Grasshopper::Grasshopper(int pos, int player_id) : Piece(pos, player_id){
+Grasshopper::Grasshopper(int pos, int player_id) : Piece(pos, player_id) {
     name = "Grasshopper";
     setId("G");
     setVal(3);
 }
 
-bool grasshopperMovement(int i, int j, int nextI, int nextJ, std::vector<Piece *> &pieces, Piece *piece){
+bool grasshopperMovement(int i, int j, int nextI, int nextJ, std::vector<Piece *> &pieces, Piece *piece) {
         int pos = calcPos(i, j);
-        if (pieces[pos]){
+        if (pieces[pos]) {
             int landPos = calcPos(nextI, nextJ);
-            if (!pieces[landPos] || (pieces[landPos]->getPlayer() != piece->getPlayer())){
+            if (!pieces[landPos] || (pieces[landPos]->getPlayer() != piece->getPlayer())) {
                 piece->allowedMoves.push_back(landPos);
             }
             return true;
@@ -375,96 +375,96 @@ bool grasshopperMovement(int i, int j, int nextI, int nextJ, std::vector<Piece *
 }
 
 
-void Grasshopper::updateAllowedMoves(std::vector<Piece *> &pieces){
+void Grasshopper::updateAllowedMoves(std::vector<Piece *> &pieces) {
     // Moves horizontally/vertically/diagonally, but can only move if
     // it's possible to jump over another piece, then it lands immediately beyond that piece
     allowedMoves.clear();
     int x = getPosition() / 8;
     int y = getPosition() % 8;
-    for (int i = x - 1; i > 0; --i){
-        if (grasshopperMovement(i, y, i - 1, y, pieces, this)){
+    for (int i = x - 1; i > 0; --i) {
+        if (grasshopperMovement(i, y, i - 1, y, pieces, this)) {
             break;
         }
     }
-    for (int i = x + 1; i < 7; ++i){
-        if (grasshopperMovement(i, y, i + 1, y, pieces, this)){
+    for (int i = x + 1; i < 7; ++i) {
+        if (grasshopperMovement(i, y, i + 1, y, pieces, this)) {
             break;
         }
     }
-    for (int j = y - 1; j > 0; --j){
-        if (grasshopperMovement(x, j, x, j - 1, pieces, this)){
+    for (int j = y - 1; j > 0; --j) {
+        if (grasshopperMovement(x, j, x, j - 1, pieces, this)) {
             break;
         }
     }
-    for (int j = y + 1; j < 7; ++j){
-        if (grasshopperMovement(x, j, x, j + 1, pieces, this)){
+    for (int j = y + 1; j < 7; ++j) {
+        if (grasshopperMovement(x, j, x, j + 1, pieces, this)) {
             break;
         }
     }
-    for (int i = x - 1, j = y - 1; i > 0 && j > 0; --i, --j){
-        if (grasshopperMovement(i, j, i - 1, j - 1, pieces, this)){
+    for (int i = x - 1, j = y - 1; i > 0 && j > 0; --i, --j) {
+        if (grasshopperMovement(i, j, i - 1, j - 1, pieces, this)) {
             break;
         }
     }
-    for (int i = x - 1, j = y + 1; i > 0 && j < 7; --i, ++j){
-        if (grasshopperMovement(i, j, i - 1, j + 1,pieces, this)){
+    for (int i = x - 1, j = y + 1; i > 0 && j < 7; --i, ++j) {
+        if (grasshopperMovement(i, j, i - 1, j + 1,pieces, this)) {
             break;
         }
     }
-    for (int i = x + 1, j = y - 1; i < 7 && j > 0; ++i, --j){
-        if (grasshopperMovement(i, j, i + 1, j - 1, pieces, this)){
+    for (int i = x + 1, j = y - 1; i < 7 && j > 0; ++i, --j) {
+        if (grasshopperMovement(i, j, i + 1, j - 1, pieces, this)) {
             break;
         }
     }
-    for (int i = x + 1, j = y + 1; i < 7 && j < 7; ++i, ++j){
-        if (grasshopperMovement(i, j, i + 1, j + 1, pieces, this)){
+    for (int i = x + 1, j = y + 1; i < 7 && j < 7; ++i, ++j) {
+        if (grasshopperMovement(i, j, i + 1, j + 1, pieces, this)) {
             break;
         }
     }
 }
 
 
-King::King(int pos, int player_id) : Piece(pos, player_id){
+King::King(int pos, int player_id) : Piece(pos, player_id) {
     name = "King";
     setId("K");
     setVal(1000);
     isInCheck = false;
 }
 
-void King::updateAllowedMoves(std::vector<Piece *> &pieces){
+void King::updateAllowedMoves(std::vector<Piece *> &pieces) {
     // Moves 1 square in any direction, cannot be captured
     allowedMoves.clear();
     int x = getPosition() / 8;
     int y = getPosition() % 8;
     int pos = calcPos(x - 1, y);
     int diagPos = calcPos(x - 1, y - 1);
-    if (x > 0 && (!pieces[pos] || pieces[pos]->getPlayer() != getPlayer())){
+    if (x > 0 && (!pieces[pos] || pieces[pos]->getPlayer() != getPlayer())) {
         allowedMoves.push_back(pos);
-        if (y > 0 && (!pieces[diagPos] || pieces[diagPos]->getPlayer() != getPlayer())){
+        if (y > 0 && (!pieces[diagPos] || pieces[diagPos]->getPlayer() != getPlayer())) {
             allowedMoves.push_back(diagPos);
         }
     }
     pos = calcPos(x + 1, y);
     diagPos = calcPos(x + 1, y + 1);
-    if (x < 7 && (!pieces[pos] || pieces[pos]->getPlayer() != getPlayer())){
+    if (x < 7 && (!pieces[pos] || pieces[pos]->getPlayer() != getPlayer())) {
         allowedMoves.push_back(pos);
-        if (y < 7 && (!pieces[diagPos] || pieces[diagPos]->getPlayer() != getPlayer())){
+        if (y < 7 && (!pieces[diagPos] || pieces[diagPos]->getPlayer() != getPlayer())) {
             allowedMoves.push_back(diagPos);
         }
     }
     pos = calcPos(x, y - 1);
     diagPos = calcPos(x + 1, y - 1);
-    if (y > 0 && (!pieces[pos] || pieces[pos]->getPlayer() != getPlayer())){
+    if (y > 0 && (!pieces[pos] || pieces[pos]->getPlayer() != getPlayer())) {
         allowedMoves.push_back(pos);
-        if (x < 7 && (!pieces[diagPos] || pieces[diagPos]->getPlayer() != getPlayer())){
+        if (x < 7 && (!pieces[diagPos] || pieces[diagPos]->getPlayer() != getPlayer())) {
             allowedMoves.push_back(diagPos);
         }
     }
     pos = calcPos(x, y + 1);
     diagPos = calcPos(x - 1, y + 1);
-    if (y < 7 && (!pieces[pos] || pieces[pos]->getPlayer() != getPlayer())){
+    if (y < 7 && (!pieces[pos] || pieces[pos]->getPlayer() != getPlayer())) {
         allowedMoves.push_back(pos);
-        if (x > 0 && (!pieces[diagPos] || pieces[diagPos]->getPlayer() != getPlayer())){
+        if (x > 0 && (!pieces[diagPos] || pieces[diagPos]->getPlayer() != getPlayer())) {
             allowedMoves.push_back(diagPos);
         }
     }
@@ -472,8 +472,8 @@ void King::updateAllowedMoves(std::vector<Piece *> &pieces){
 
 void checkPositionUnderAttack(std::unordered_map<int, std::vector<std::string>> &thisPossibleMoves,
                     std::unordered_map<int, std::vector<std::string>> &opponentPossibleMoves,
-                    King *king, int pos, char alg[2]){
-    if (opponentPossibleMoves.find(pos) == opponentPossibleMoves.end()){
+                    King *king, int pos, char alg[2]) {
+    if (opponentPossibleMoves.find(pos) == opponentPossibleMoves.end()) {
         king->allowedMoves.push_back(pos);
         std::string files = "abcdefgh";
         std::string ranks = "12345678";
@@ -487,7 +487,7 @@ void checkPositionUnderAttack(std::unordered_map<int, std::vector<std::string>> 
 
 void King::updateAllowedMoves(std::vector<Piece *> &pieces, 
                         std::unordered_map<int, std::vector<std::string>> &thisPossibleMoves,
-                        std::unordered_map<int, std::vector<std::string>> &opponentPossibleMoves){
+                        std::unordered_map<int, std::vector<std::string>> &opponentPossibleMoves) {
     // Moves 1 square in any direction, cannot be captured
     allowedMoves.clear();
     int x = getPosition() / 8;
@@ -495,64 +495,64 @@ void King::updateAllowedMoves(std::vector<Piece *> &pieces,
     char alg[2];
     int pos = calcPos(x - 1, y);
     int diagPos = calcPos(x - 1, y - 1);
-    if (x > 0 && (!pieces[pos] || pieces[pos]->getPlayer() != getPlayer())){
+    if (x > 0 && (!pieces[pos] || pieces[pos]->getPlayer() != getPlayer())) {
         checkPositionUnderAttack(thisPossibleMoves, opponentPossibleMoves, this, pos, alg);
-        if (y > 0 && (!pieces[diagPos] || pieces[diagPos]->getPlayer() != getPlayer())){
+        if (y > 0 && (!pieces[diagPos] || pieces[diagPos]->getPlayer() != getPlayer())) {
             checkPositionUnderAttack(thisPossibleMoves, opponentPossibleMoves, this, diagPos, alg);
         }
     }
     pos = calcPos(x + 1, y);
     diagPos = calcPos(x + 1, y + 1);
-    if (x < 7 && (!pieces[pos] || pieces[pos]->getPlayer() != getPlayer())){
+    if (x < 7 && (!pieces[pos] || pieces[pos]->getPlayer() != getPlayer())) {
         checkPositionUnderAttack(thisPossibleMoves, opponentPossibleMoves, this, pos, alg);
-        if (y < 7 && (!pieces[diagPos] || pieces[diagPos]->getPlayer() != getPlayer())){
+        if (y < 7 && (!pieces[diagPos] || pieces[diagPos]->getPlayer() != getPlayer())) {
             checkPositionUnderAttack(thisPossibleMoves, opponentPossibleMoves, this, diagPos, alg);
         }
     }
     pos = calcPos(x, y - 1);
     diagPos = calcPos(x + 1, y - 1);
-    if (y > 0 && (!pieces[pos] || pieces[pos]->getPlayer() != getPlayer())){
+    if (y > 0 && (!pieces[pos] || pieces[pos]->getPlayer() != getPlayer())) {
         checkPositionUnderAttack(thisPossibleMoves, opponentPossibleMoves, this, pos, alg);
-        if (x < 7 && (!pieces[diagPos] || pieces[diagPos]->getPlayer() != getPlayer())){
+        if (x < 7 && (!pieces[diagPos] || pieces[diagPos]->getPlayer() != getPlayer())) {
             checkPositionUnderAttack(thisPossibleMoves, opponentPossibleMoves, this, diagPos, alg);
         }
     }
     pos = calcPos(x, y + 1);
     diagPos = calcPos(x - 1, y + 1);
-    if (y < 7 && (!pieces[pos] || pieces[pos]->getPlayer() != getPlayer())){
+    if (y < 7 && (!pieces[pos] || pieces[pos]->getPlayer() != getPlayer())) {
         checkPositionUnderAttack(thisPossibleMoves, opponentPossibleMoves, this, pos, alg);
-        if (x > 0 && (!pieces[diagPos] || pieces[diagPos]->getPlayer() != getPlayer())){
+        if (x > 0 && (!pieces[diagPos] || pieces[diagPos]->getPlayer() != getPlayer())) {
             checkPositionUnderAttack(thisPossibleMoves, opponentPossibleMoves, this, diagPos, alg);
         }
 
     }
 }
 
-bool King::getIsInCheck(){
+bool King::getIsInCheck() {
     return isInCheck;
 }
 
-bool King::getIsInCheck(std::unordered_map<int, std::vector<std::string>> &opponentPossibleMoves){
+bool King::getIsInCheck(std::unordered_map<int, std::vector<std::string>> &opponentPossibleMoves) {
     return opponentPossibleMoves.find(getPosition()) != opponentPossibleMoves.end();
 }
 
-void King::setThreats(Piece *piece){
+void King::setThreats(Piece *piece) {
     threats.push_back(piece);
 }
 
-std::vector<Piece *> King::getThreats(){
+std::vector<Piece *> King::getThreats() {
     return threats;
 }
 
-void King::clearThreats(){
+void King::clearThreats() {
     threats.clear();
 }
 
-bool King::getIsCheckmated(){
+bool King::getIsCheckmated() {
     return isCheckmated;
 }
 
-void King::setIsCheckmated(bool checkmate){
+void King::setIsCheckmated(bool checkmate) {
     isCheckmated = checkmate;
 }
 

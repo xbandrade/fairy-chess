@@ -1,48 +1,54 @@
-#include "headers/board.hpp"
-#define WHITE_SQUARE_LINE "\u2588\u2588\u2588\u2588\u2588"
-#define WHITE_SQUARE "\u2588"
+#include "board.hpp"
+#define WHITE_SQUARE_LINE "█████"
+#define WHITE_SQUARE "█"
 #define BLACK_SQUARE_LINE "     "
 #define BLACK_SQUARE " "
 
-Board::Board() : pieces(64, nullptr), gameStarted(false){
+Board::Board() : pieces(64, nullptr), gameStarted(false) {
     createAlgebraicMap();
     createDefaultPieces(1);
     createDefaultPieces(2);
 }
 
-void Board::printBoard(){
+void Board::printBoard() {
     std::cout << "\n";
     std::cout << "    A    B    C    D    E    F    G    H   \n";
     bool isWhiteSquare = false;
-    for (int i = 7; i >= 0; --i){
+    for (int i = 7; i >= 0; --i) {
         isWhiteSquare = i % 2 == 0 ? false : true;
-        for (int p = 0; p < 3; ++p){
-            if (p == 1){
+        for (int p = 0; p < 3; ++p) {
+            if (p == 1) {
                 std::cout << i + 1 << " ";
             }
-            else{
+            else {
                 std::cout << "  ";
             }
-            for (int j = 0; j < 8; ++j){
-                if (p == 1){
+            for (int j = 0; j < 8; ++j) {
+                if (p == 1) {
                     const char *squareColor = isWhiteSquare ? WHITE_SQUARE : BLACK_SQUARE;
                     std::cout << squareColor;
-                    if (pieces[i * 8 + j]){
+                    if (pieces[i * 8 + j]) {
                         int player = pieces[i * 8 + j]->getPlayer();
                         std::string id = pieces[i * 8 + j]->getId();
+                        /*if (id == "Q") {
+                            id = "♕";
+                        }
+                        else if (id == "K") {
+                            id = "♔";
+                        }*/
                         std::cout << (player == 1 ? "\033[1;100;97m " : "\033[46;30m ") << id << " \033[0m";
                     }
-                    else{
+                    else {
                         std::cout << squareColor << squareColor << squareColor;
                     }
                     std::cout  << squareColor;
                 }
-                else{
+                else {
                     std::cout << (isWhiteSquare ? WHITE_SQUARE_LINE : BLACK_SQUARE_LINE);
                 }
                 isWhiteSquare = !isWhiteSquare;
             }
-            if (p == 1){
+            if (p == 1) {
                 std::cout << " " << i + 1;
             }
             else {
@@ -54,9 +60,9 @@ void Board::printBoard(){
     std::cout << "    A    B    C    D    E    F    G    H   \n";
 }
 
-void Board::clearBoard(){
-    for (auto piece : pieces){
-        if (piece){
+void Board::clearBoard() {
+    for (auto piece : pieces) {
+        if (piece) {
             delete piece;
         }
     }
@@ -66,10 +72,10 @@ void Board::clearBoard(){
 }
 
 
-void Board::updatePiecesLocation(){
+void Board::updatePiecesLocation() {
     piecesLocation.clear();
-    for (auto piece : pieces){
-        if (piece){
+    for (auto piece : pieces) {
+        if (piece) {
             std::string key = std::to_string(piece->getPlayer()) + piece->getId();
             piecesLocation[key].push_back(piece->getPosition());
         }
@@ -77,8 +83,8 @@ void Board::updatePiecesLocation(){
 }
 
 
-void Board::createDefaultPieces(int player){
-    if (player == 1){
+void Board::createDefaultPieces(int player) {
+    if (player == 1) {
         pieces[0] = new Rook(0, 1);
         pieces[1] = new Knight(1, 1);
         pieces[2] = new Bishop(2, 1);
@@ -89,7 +95,7 @@ void Board::createDefaultPieces(int player){
         pieces[7] = new Rook(7, 1);
         pieces[8] = new Camel(8, 1);
         pieces[9] = new Wazir(9, 1);
-        for (int i = 2; i < 6; ++i){
+        for (int i = 2; i < 6; ++i) {
             pieces[8 + i] = new Pawn(8 + i, 1);
         }
         pieces[14] = new Wazir(14, 1);
@@ -110,7 +116,7 @@ void Board::createDefaultPieces(int player){
         pieces[56] = new Rook(56, 2);
         pieces[55] = new Grasshopper(55, 2);
         pieces[54] = new Wazir(54, 2);
-        for (int i = 2; i < 6; ++i){
+        for (int i = 2; i < 6; ++i) {
             pieces[48 + i] = new Pawn(48 + i, 2);
         }
         pieces[49] = new Wazir(49, 2);
@@ -123,19 +129,19 @@ void Board::createDefaultPieces(int player){
 } 
 
 
-void Board::createAlgebraicMap(){
+void Board::createAlgebraicMap() {
     std::string files = "abcdefgh";
     int k = 0;
-    for (int i = 1; i <= 8; ++i){
-        for (int j = 0; j < 8; ++j, ++k){
+    for (int i = 1; i <= 8; ++i) {
+        for (int j = 0; j < 8; ++j, ++k) {
             positionMap[files[j] + std::to_string(i)] = k;
         }
     }
 }
 
 
-Board::~Board(){
-    for (auto piece : pieces){
+Board::~Board() {
+    for (auto piece : pieces) {
         delete piece;
     }
 }

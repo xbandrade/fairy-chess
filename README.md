@@ -3,9 +3,13 @@
 ### ❕Fairy Chess is a type of chess variant that modifies some rules, pieces and/or the board of traditional chess.
 
 ### ➡️ Setup 
-```./fairy-chess``` to run the game without recompiling <br/> 
-```make``` to run the Makefile and create the executable `fairy-chess` <br/> 
-```./run.sh``` to recompile the application and run `fairy-chess` <br/> 
+#### ❕Unix systems
+```./build.sh``` to build the application with CMake and run `fairy-chess` <br/> 
+
+#### ❕Windows systems
+```./build.bat``` to build the application with CMake and run `fairy-chess.exe` <br/> 
+```./run.bat``` to run the application after compiling <br/> 
+
 
 ## ❕Main Menu Options
 - `Player vs Player` will start a match between two players
@@ -38,6 +42,7 @@
 - `m*` will display all legal moves for the current player
 - `M1B` will take you to a mate in 1 position for the black pieces, can only use it on the first move
 - `M1W` will take you to a mate in 1 position for the white pieces, can only use it on the first move
+- `quit` during a match will forfeit the game and go to the main menu
 
 More information about Fairy Chess pieces and rules can be found on [chess.com](https://www.chess.com/clubs/forum/view/the-fairy-pieces-introduction)
 and [Wikipedia](https://en.wikipedia.org/wiki/Fairy_chess_piece).  

@@ -8,27 +8,28 @@
 #include <unordered_set>
 #include <map>
 #include <utility>
+#include <string>
 #include <queue>
 #include <cstdlib>
 #include <ctime>
 #include "player.hpp"
 #include "board.hpp"
 
-int algebraicToPosition(std::string move, Board &board);
+int algebraicToPosition(const std::string &move, Board &board);
 
 void positionToAlgebraic(int pos, char alg[2]);
 
-std::string validateMove(std::string move, Player &currentPlayer);
+std::string validateMove(const std::string &move, Player &currentPlayer);
 
 void updateAllPossibleMoves(Board &board, Player &black, Player &white);
 
 void updatePlayerScores(Board &board, Player &black, Player &white);
 
-bool simulateMove(std::string move, Board &board, int turn, King *king, Player &black, Player &white);
+bool simulateMove(const std::string &move, Board &board, int turn, King *king, Player &black, Player &white);
 
 void forceKingOutOfCheck(Board &board, int turn, King *king, Player &black, Player &white);
 
-bool playMove(std::string move, Board &board, int turn, King *king, Player &black, Player &white);
+bool playMove(const std::string &move, Board &board, int turn, King *king, Player &black, Player &white);
 
 void findKingThreats(King *king, Board &board);
 
